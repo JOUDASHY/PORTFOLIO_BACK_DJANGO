@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lettre de Motivation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            width: 880px;
+            height: 1169px;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .header {
+            text-align: right;
+        }
+
+        .header div {
+            text-align: left;
+        }
+
+        .body {
+            margin-top: 20px;
+            margin-left: 50px;
+        }
+
+        .signature {
+            text-align: right;
+            margin-top: 50px;
+        }
+
+        .cv {
+            margin: 60px;
+        }
+
+        .contenu {
+            text-align: justify;
+            text-justify: inter-word;
+            margin-right: 10px;
+            line-height: 2.4;
+        }
+
+        @media print {
+            body {
+                font-size: 12px; /* Ajuste la taille de police pour l'impression */
+                width: 100%; /* S'assurer que la largeur est correcte */
+                height: auto; /* Ajuste la hauteur automatiquement */
+            }
+
+            .cv {
+                width: 100%;
+                margin: 0;
+            }
+
+            .header, .body, .signature {
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+            .contenu {
+                text-align: justify;
+                text-justify: inter-word;
+                margin-right: 0;
+                line-height: 2;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cv">
+        <div class="header">
+            <div>
+                <p>ALITSIRY Eddy Nilsen Tovohery</p>
+                <p>{{lieu_entreprise|title}}</p>
+                <p>Téléphone: 034 86 555 23</p>
+                <p>Adresse e-mail: alitsiryeddynilsen@gmail.com</p>
+            </div>
+            <p>{{nom_entreprise|title}} {{lieu_entreprise|title}}</p>
+            <p> {{lieu_entreprise|upper}}, le {{date}}</p>
+        </div>
+    
+        <div class="body">
+            <h2>Objet : Lettre de demande de stage</h2>
+            <p>Monsieur le Responsable de {{nom_entreprise|title}} </p> 
+    
+            <div class="contenu">
+                <p style="text-indent: 50px;">Je me permets de vous adresser ma candidature en tant qu'étudiant en informatique passionné et motivé, dans l'objectif de rejoindre votre entreprise {{nom_entreprise|title}} renommée en tant que stagiaire, avec un début le 20 août pour une durée de 3 mois, tout en préparant ma mémoire de licence. Actuellement, je suis un étudiant en troisième année à l'ENI Fianarantsoa. Je suis profondément passionné par le monde de l'informatique, notamment en DevOps, développement web Django et administration Système et Réseau. J'ai acquis des connaissances solides dans divers domaines tels que la programmation, les bases de données, les réseaux et la sécurité informatique. J'ai également travaillé sur des projets de développement web avec bases de données. J'ai démontré ma capacité à m'adapter rapidement aux nouvelles technologies et à apprendre de manière autonome.</p>
+                
+                <p style="text-indent: 50px;">Votre entreprise est réputée pour son expertise et son innovation dans votre domaine, et c'est précisément l'environnement dans lequel je souhaite m'épanouir. Je serais honoré de contribuer à vos projets, d'apprendre de vos experts et de participer à votre culture d'innovation.</p>
+                
+                <p style="text-indent: 50px;">Je vous prie d’agréer, Monsieur, l’expression de mes sentiments distingués.</p>
+            </div>
+        </div>
+    
+        <div class="signature">
+            <p>Signature</p>
+            <p>Nilsen Tovohery</p>
+        </div>
+    </div>
+    </body>
+</html>
