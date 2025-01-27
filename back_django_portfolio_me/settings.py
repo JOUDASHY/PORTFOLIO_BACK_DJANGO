@@ -106,9 +106,8 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 ALLOWED_HOSTS = [
-    '192.168.43.135',  # Adresse IP locale
-    '127.0.0.1',       # Boucle locale
-    'localhost'        # Nom de domaine local
+  
+    '*'
 ]
 
 
