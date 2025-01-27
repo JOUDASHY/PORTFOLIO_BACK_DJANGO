@@ -5,6 +5,8 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.timezone import now
 
 from django.contrib.auth.models import User
+import mimetypes
+from django.core.exceptions import ValidationError
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications")
@@ -164,16 +166,21 @@ class Langue(models.Model):
     def __str__(self):
         return self.titre
 
+# Valide que le fichier est un SVG
+def validate_svg(file):
+    mime_type, encoding = mimetypes.guess_type(file.name)
+    if mime_type != 'image/svg+xml':
+        raise ValidationError("Le fichier doit être au format SVG.")
+
 class Competence(models.Model):
-    image = models.ImageField(upload_to='competences/images/', blank=True, null=True)
+    image = models.FileField(upload_to='competences/images/', blank=True, null=True, validators=[validate_svg])  # Utilisation du validateur
     name = models.CharField(max_length=100)
     description = models.TextField()
     niveau = models.IntegerField()
-    categorie = models.CharField(max_length=100, blank=True, null=True)  # Simple champ texte
+    categorie = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
         return self.name
-
 
 class Visit(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
