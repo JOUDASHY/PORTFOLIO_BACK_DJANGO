@@ -77,7 +77,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://192.168.43.135:5173",     # Adresse IP et port du frontend
     "http://192.168.43.135:5174",     # Adresse IP et port du frontend
     "http://localhost:5174",     # Adresse IP et port du frontend
-    "https://portfolio-nilsen.onrender.com"
+    "https://portfolio-nilsen.onrender.com",
+    "https://nilsen.onrender.com"
 ]
 
 
