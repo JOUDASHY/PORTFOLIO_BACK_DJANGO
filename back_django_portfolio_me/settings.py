@@ -83,7 +83,7 @@ CORS_ALLOWED_ORIGINS = [
 
 
 # Configurer le backend de Channels
-ASGI_APPLICATION = 'your_project_name.asgi.application'
+ASGI_APPLICATION = 'back_django_portfolio_me.asgi.application'
 
 # Configuration du channel layer (utilisez Redis pour un projet réel)
 # settings.py

@@ -342,12 +342,38 @@ class ImageProjetViewSet(viewsets.ModelViewSet):
 class CompetenceViewSet(viewsets.ModelViewSet):
     queryset = Competence.objects.all()
     serializer_class = CompetenceSerializer
-    def get_permissions(self):
-        if self.action == 'list':  # Autoriser l'accès public uniquement pour POST
-            return [AllowAny()]
-        return [IsAuthenticated()]  
 
-    
+    def get_permissions(self):
+        if self.action == 'list':  # Autoriser l'accès public uniquement pour LIST
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()  # Obtenez l'instance actuelle
+        old_image = instance.image  # Stockez l'image actuelle
+        new_image = request.data.get('image')  # Vérifiez la nouvelle image dans la requête
+
+        # Effectuez la mise à jour de l'instance
+        response = super().update(request, *args, **kwargs)
+
+        # Si une nouvelle image est fournie et que l'ancienne existe, supprimez l'ancienne
+        if new_image and old_image and old_image.name != new_image:
+            if default_storage.exists(old_image.path):  # Vérifiez si le fichier existe
+                os.remove(old_image.path)  # Supprimez le fichier physique
+
+        return response
+
+    def perform_destroy(self, instance):
+        """
+        Supprime l'objet et son image associée.
+        """
+        if instance.image:  # Vérifiez si l'objet a une image
+            if default_storage.exists(instance.image.path):  # Vérifiez si le fichier existe
+                os.remove(instance.image.path)  # Supprimez le fichier physique
+
+        # Supprimer l'instance de la base de données
+        instance.delete()
+
 
 class PasswordResetConfirmView(APIView):
     def post(self, request):
@@ -609,10 +635,10 @@ class NilsenProfileView(APIView):
     permission_classes = [AllowAny] 
     def get(self, request):
         try:
-            # Récupérer l'utilisateur avec id=2
-            user = User.objects.get(id=2)
+            # Récupérer l'utilisateur avec id=1
+            user = User.objects.get(id=1)
         except User.DoesNotExist:
-            raise NotFound("User with id=2 does not exist.")
+            raise NotFound("User with id=1 does not exist.")
 
         # Construire une réponse JSON
         data = {
@@ -629,8 +655,6 @@ class NilsenProfileView(APIView):
             "address": getattr(user.profile, 'address', None),
         }
         return Response(data, status=status.HTTP_200_OK)
-
-
 
 
 class RegisterView(APIView):
@@ -741,17 +765,44 @@ class LogoutView(APIView):
 
 
 
+
 class EducationViewSet(viewsets.ModelViewSet):
     """
     ViewSet pour gérer les opérations CRUD sur le modèle Education.
     """
     queryset = Education.objects.all().order_by('-annee_fin')
     serializer_class = EducationSerializer
-    def get_permissions(self):
-        if self.action == 'list':  # Autoriser l'accès public uniquement pour POST
-            return [AllowAny()]
-        return [IsAuthenticated()]  
 
+    def get_permissions(self):
+        if self.action == 'list':  # Autoriser l'accès public uniquement pour LIST
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()  # Obtenez l'instance actuelle
+        old_image = instance.image  # Stockez l'image actuelle
+        new_image = request.data.get('image')  # Vérifiez la nouvelle image dans la requête
+
+        # Effectuez la mise à jour de l'instance
+        response = super().update(request, *args, **kwargs)
+
+        # Si une nouvelle image est fournie et que l'ancienne existe, supprimez l'ancienne
+        if new_image and old_image and old_image.name != new_image:
+            if default_storage.exists(old_image.path):  # Vérifiez si le fichier existe
+                os.remove(old_image.path)  # Supprimez le fichier physique
+
+        return response
+
+    def perform_destroy(self, instance):
+        """
+        Supprime l'objet et son image associée.
+        """
+        if instance.image:  # Vérifiez si l'objet a une image
+            if default_storage.exists(instance.image.path):  # Vérifiez si le fichier existe
+                os.remove(instance.image.path)  # Supprimez le fichier physique
+
+        # Supprimer l'instance de la base de données
+        instance.delete()
 
 class ExperienceViewSet(viewsets.ModelViewSet):
     queryset = Experience.objects.all().order_by('-date_fin')

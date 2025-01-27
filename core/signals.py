@@ -17,7 +17,7 @@ def notify_on_rating(sender, instance, created, **kwargs):
     """
     if created:
         try:
-            project_owner = User.objects.get(id=2)  # Utilisateur avec l'ID 2
+            project_owner = User.objects.get(id=1)  # Utilisateur avec l'ID 2
             Notification.objects.create(
                 user=project_owner,
                 title="Nouvelle note reçue",
@@ -37,7 +37,7 @@ def notify_on_view_threshold(sender, instance, created, **kwargs):
             visits_count = Visit.objects.filter(timestamp__gte=yesterday).count()
 
             if visits_count == 5:  # Seuil atteint
-                project_owner = User.objects.get(id=2)  # Utilisateur avec l'ID 2
+                project_owner = User.objects.get(id=1)  # Utilisateur avec l'ID 2
                 Notification.objects.create(
                     user=project_owner,
                     title="Seuil de vues atteint",
