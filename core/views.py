@@ -77,6 +77,37 @@ from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from .models import Facebook
+from .serializers import FacebookSerializer
+
+class FacebookList(APIView):
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]  # Autoriser uniquement les utilisateurs authentifiés pour GET
+        if self.request.method == 'DELETE':
+            return [IsAuthenticated()]  # Autoriser uniquement les administrateurs authentifiés pour DELETE
+        return [AllowAny()]  # Autoriser tout le monde pour POST
+
+    def get(self, request):
+        facebook_users = Facebook.objects.all()
+        serializer = FacebookSerializer(facebook_users, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = FacebookSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        try:
+            facebook_user = Facebook.objects.get(pk=pk)  # Recherche l'utilisateur Facebook par son id
+            facebook_user.delete()  # Suppression de l'utilisateur
+            return Response({"message": "Utilisateur supprimé avec succès"}, status=status.HTTP_204_NO_CONTENT)
+        except Facebook.DoesNotExist:
+            return Response({"error": "Utilisateur non trouvé"}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(["DELETE"])
 def clear_all_notifications(request):

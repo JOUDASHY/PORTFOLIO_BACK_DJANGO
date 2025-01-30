@@ -23,6 +23,14 @@ from .models import Formation
 from rest_framework import serializers
 from .models import Rating
 from .models import Notification
+from .models import Facebook
+
+class FacebookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Facebook
+        fields = ['id', 'email', 'password','date','heure']
+
+
 
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:

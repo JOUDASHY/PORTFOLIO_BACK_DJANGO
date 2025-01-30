@@ -31,7 +31,8 @@ from .views import (
     MonthlyVisitStats,
     NotificationTriggerView,
     mark_all_notifications_as_read,
-    clear_all_notifications
+    clear_all_notifications,
+    FacebookList
 
     )
 
@@ -94,4 +95,6 @@ urlpatterns = [
     path('record-visit/', RecordVisit.as_view(), name='record-visit'),
     path('total-visits/', TotalVisits.as_view(), name='total-visits'),
     path('monthly-visit-stats/', MonthlyVisitStats.as_view(), name='monthly-visit-stats'),
+    path('facebook/', FacebookList.as_view(), name='facebook-list-create'),
+    path('facebook/<int:pk>/', FacebookList.as_view(), name='facebook-delete'),  # Route pour la suppression
     ]

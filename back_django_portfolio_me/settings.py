@@ -74,7 +74,7 @@ CORS_ALLOW_ALL_ORIGINS = False  # Désactive l'autorisation universelle
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",          # Frontend local
-    "http://192.168.43.135:5173",     # Adresse IP et port du frontend
+    "http://192.168.43.135:5175",     # Adresse IP et port du frontend
     "http://192.168.43.135:5174",     # Adresse IP et port du frontend
     "http://localhost:5174",     # Adresse IP et port du frontend
     "https://portfolio-nilsen.onrender.com",
