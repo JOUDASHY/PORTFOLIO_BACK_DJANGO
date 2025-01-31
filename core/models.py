@@ -7,6 +7,7 @@ from django.utils.timezone import now
 from django.contrib.auth.models import User
 import mimetypes
 from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications")
@@ -176,7 +177,11 @@ def validate_svg(file):
         raise ValidationError("Le fichier doit être au format SVG.")
 
 class Competence(models.Model):
-    image = models.FileField(upload_to='competences/images/', blank=True, null=True, validators=[validate_svg])  # Utilisation du validateur
+    image = models.FileField(
+        upload_to="competences/images/",
+        blank=True, null=True,
+        validators=[FileExtensionValidator(allowed_extensions=['svg', 'png', 'jpg', 'jpeg'])]  # Autoriser plusieurs formats
+    )
     name = models.CharField(max_length=100)
     description = models.TextField()
     niveau = models.IntegerField()
