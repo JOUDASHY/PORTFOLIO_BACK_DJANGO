@@ -77,6 +77,9 @@ class Projet(models.Model):
     nom = models.CharField(max_length=100)
     description = models.TextField()
     techno = models.CharField(max_length=100)
+    githublink = models.URLField(blank=True, null=True)  # Lien GitHub (optionnel)
+    projetlink = models.URLField(blank=True, null=True)  # Lien du projet (optionnel)
+
   
     def __str__(self):
         return self.nom

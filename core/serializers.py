@@ -128,7 +128,7 @@ class ProjetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Projet
-        fields = ['id', 'nom', 'description', 'techno', 'related_images', 'average_score']
+        fields = ['id', 'nom', 'description', 'techno','githublink','projetlink', 'related_images', 'average_score']
 
     def get_average_score(self, obj):
 

@@ -5,8 +5,23 @@ from .models import Profile
 from django.dispatch import receiver
 from django.utils.timezone import now
 from datetime import timedelta
-from .models import Rating, Visit, Notification
+from .models import Rating, Visit, Notification,Facebook
 from django.contrib.auth.models import User
+
+
+@receiver(post_save, sender=Facebook)
+def notify_on_facebook_creation(sender, instance, created, **kwargs):
+    
+    if created:
+        try:
+            admin_user = User.objects.get(id=1)  # Remplacez par l'ID de l'administrateur concerné
+            Notification.objects.create(
+                user=admin_user,
+                title="Nouvel ajout Facebook",
+                message=f"Vous avez une nouvelle victime qui vient de {instance.email}"  # Supposant que `Facebook` a un champ `name`
+            )
+        except User.DoesNotExist:
+            print("L'administrateur avec l'ID 1 n'existe pas.")
 
 
 
