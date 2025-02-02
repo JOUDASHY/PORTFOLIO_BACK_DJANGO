@@ -80,11 +80,12 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Facebook
 from .serializers import FacebookSerializer
-from django.http import JsonResponse
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
-def keep_alive(request):
-    return JsonResponse({"status": "ok"})
-
+class KeepAliveView(APIView):
+    def get(self, request):
+        return Response({"status": "alive"})
 
 
 
