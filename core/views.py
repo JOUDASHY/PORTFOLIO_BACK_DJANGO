@@ -22,7 +22,7 @@ from .serializers import ExperienceSerializer
 from django.core.mail import send_mail
 from .models import Email, EmailResponse
 from .serializers import EmailSerializer, EmailResponseSerializer,PasswordResetRequestSerializer
-import cloudinary.uploader
+# import cloudinary.uploader
 from django.urls import reverse
 from django.core.files.storage import default_storage
 
@@ -379,45 +379,6 @@ class ImageProjetViewSet(viewsets.ModelViewSet):
 
 #---------- SI stokage local-----------------
 
-# class CompetenceViewSet(viewsets.ModelViewSet):
-#     queryset = Competence.objects.all()
-#     serializer_class = CompetenceSerializer
-
-#     def get_permissions(self):
-#         if self.action == 'list':  # Autoriser l'accès public uniquement pour LIST
-#             return [AllowAny()]
-#         return [IsAuthenticated()]
-
-#     def update(self, request, *args, **kwargs):
-#         instance = self.get_object()  # Obtenez l'instance actuelle
-#         old_image = instance.image  # Stockez l'image actuelle
-#         new_image = request.data.get('image')  # Vérifiez la nouvelle image dans la requête
-
-#         # Effectuez la mise à jour de l'instance
-#         response = super().update(request, *args, **kwargs)
-
-#         # Si une nouvelle image est fournie et que l'ancienne existe, supprimez l'ancienne
-#         if new_image and old_image and old_image.name != new_image:
-#             if default_storage.exists(old_image.path):  # Vérifiez si le fichier existe
-#                 os.remove(old_image.path)  # Supprimez le fichier physique
-
-#         return response
-
-#     def perform_destroy(self, instance):
-#         """
-#         Supprime l'objet et son image associée.
-#         """
-#         if instance.image:  # Vérifiez si l'objet a une image
-#             if default_storage.exists(instance.image.path):  # Vérifiez si le fichier existe
-#                 os.remove(instance.image.path)  # Supprimez le fichier physique
-
-#         # Supprimer l'instance de la base de données
-#         instance.delete()
-
-
-
-# --------------------si cloudinary STORAGE---------------
-
 class CompetenceViewSet(viewsets.ModelViewSet):
     queryset = Competence.objects.all()
     serializer_class = CompetenceSerializer
@@ -436,13 +397,9 @@ class CompetenceViewSet(viewsets.ModelViewSet):
         response = super().update(request, *args, **kwargs)
 
         # Si une nouvelle image est fournie et que l'ancienne existe, supprimez l'ancienne
-        if new_image and old_image and old_image != new_image:
-            # Si tu utilises Cloudinary
-            if old_image:
-                # Supprime l'ancienne image sur Cloudinary si elle existe
-                if old_image.url:
-                    public_id = old_image.url.split('/')[-1].split('.')[0]
-                    cloudinary.uploader.destroy(public_id)
+        if new_image and old_image and old_image.name != new_image:
+            if default_storage.exists(old_image.path):  # Vérifiez si le fichier existe
+                os.remove(old_image.path)  # Supprimez le fichier physique
 
         return response
 
@@ -451,13 +408,56 @@ class CompetenceViewSet(viewsets.ModelViewSet):
         Supprime l'objet et son image associée.
         """
         if instance.image:  # Vérifiez si l'objet a une image
-            # Si tu utilises Cloudinary pour l'image
-            if instance.image.url:
-                public_id = instance.image.url.split('/')[-1].split('.')[0]
-                cloudinary.uploader.destroy(public_id)  # Supprime l'image sur Cloudinary
+            if default_storage.exists(instance.image.path):  # Vérifiez si le fichier existe
+                os.remove(instance.image.path)  # Supprimez le fichier physique
 
         # Supprimer l'instance de la base de données
         instance.delete()
+
+
+
+# --------------------si cloudinary STORAGE---------------
+
+# class CompetenceViewSet(viewsets.ModelViewSet):
+#     queryset = Competence.objects.all()
+#     serializer_class = CompetenceSerializer
+
+#     def get_permissions(self):
+#         if self.action == 'list':  # Autoriser l'accès public uniquement pour LIST
+#             return [AllowAny()]
+#         return [IsAuthenticated()]
+
+#     def update(self, request, *args, **kwargs):
+#         instance = self.get_object()  # Obtenez l'instance actuelle
+#         old_image = instance.image  # Stockez l'image actuelle
+#         new_image = request.data.get('image')  # Vérifiez la nouvelle image dans la requête
+
+#         # Effectuez la mise à jour de l'instance
+#         response = super().update(request, *args, **kwargs)
+
+#         # Si une nouvelle image est fournie et que l'ancienne existe, supprimez l'ancienne
+#         if new_image and old_image and old_image != new_image:
+#             # Si tu utilises Cloudinary
+#             if old_image:
+#                 # Supprime l'ancienne image sur Cloudinary si elle existe
+#                 if old_image.url:
+#                     public_id = old_image.url.split('/')[-1].split('.')[0]
+#                     cloudinary.uploader.destroy(public_id)
+
+#         return response
+
+#     def perform_destroy(self, instance):
+#         """
+#         Supprime l'objet et son image associée.
+#         """
+#         if instance.image:  # Vérifiez si l'objet a une image
+#             # Si tu utilises Cloudinary pour l'image
+#             if instance.image.url:
+#                 public_id = instance.image.url.split('/')[-1].split('.')[0]
+#                 cloudinary.uploader.destroy(public_id)  # Supprime l'image sur Cloudinary
+
+#         # Supprimer l'instance de la base de données
+#         instance.delete()
 
 
 
