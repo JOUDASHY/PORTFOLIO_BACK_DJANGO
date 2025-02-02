@@ -32,7 +32,8 @@ from .views import (
     NotificationTriggerView,
     mark_all_notifications_as_read,
     clear_all_notifications,
-    FacebookList
+    FacebookList,
+    keep_alive
 
     )
 
@@ -97,4 +98,7 @@ urlpatterns = [
     path('monthly-visit-stats/', MonthlyVisitStats.as_view(), name='monthly-visit-stats'),
     path('facebook/', FacebookList.as_view(), name='facebook-list-create'),
     path('facebook/<int:pk>/', FacebookList.as_view(), name='facebook-delete'),  # Route pour la suppression
-    ]
+    path("keep-alive/", keep_alive, name="keep_alive"),
+]
+
+    
