@@ -83,11 +83,13 @@ from .serializers import FacebookSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
+
 class KeepAliveView(APIView):
+    authentication_classes = []  # Désactive l'authentification
+    permission_classes = []  # Désactive les permissions
+
     def get(self, request):
         return Response({"status": "alive"})
-
-
 
 class FacebookList(APIView):
 
