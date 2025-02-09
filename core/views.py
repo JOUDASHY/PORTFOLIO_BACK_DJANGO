@@ -376,11 +376,23 @@ class ProjetViewSet(viewsets.ModelViewSet):
             return [AllowAny()]
         return [IsAuthenticated()]
 
-class ImageProjetViewSet(viewsets.ModelViewSet):
+
+class ImageProjetViewSet(viewsets.ViewSet):
     queryset = ImageProjet.objects.all()
     serializer_class = ImageProjetSerializer
 
-#---------- SI stokage local-----------------
+    def destroy(self, request, pk=None):
+        image_projet = ImageProjet.objects.filter(pk=pk).first()  # Utilise filter().first() pour éviter l'exception
+
+        if image_projet:
+            if image_projet.image:
+                image_path = os.path.join(settings.MEDIA_ROOT, str(image_projet.image))
+                if os.path.exists(image_path):
+                    os.remove(image_path)  # Supprime le fichier image
+            image_projet.delete()  # Supprime l'objet de la base de données
+
+        return Response({"message": "Image supprimée avec succès."}, status=status.HTTP_204_NO_CONTENT)
+
 
 class CompetenceViewSet(viewsets.ModelViewSet):
     queryset = Competence.objects.all()
