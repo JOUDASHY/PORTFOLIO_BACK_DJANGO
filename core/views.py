@@ -377,12 +377,12 @@ class ProjetViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated()]
 
 
-class ImageProjetViewSet(viewsets.ViewSet):
+class ImageProjetViewSet(viewsets.ModelViewSet):
     queryset = ImageProjet.objects.all()
     serializer_class = ImageProjetSerializer
 
     def destroy(self, request, pk=None):
-        image_projet = ImageProjet.objects.filter(pk=pk).first()  # Utilise filter().first() pour éviter l'exception
+        image_projet = ImageProjet.objects.filter(pk=pk).first()  # Évite l'exception si l'image n'existe pas
 
         if image_projet:
             if image_projet.image:

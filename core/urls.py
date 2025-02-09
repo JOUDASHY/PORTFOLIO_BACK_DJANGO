@@ -76,7 +76,8 @@ urlpatterns = [
 
     path('images/', ImageProjetViewSet.as_view({'get': 'list', 'post': 'create'}), name='image-list-create'),
     path('images/<int:pk>/', ImageProjetViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='image-detail-update-delete'),
-    
+
+
     path('users/', get_all_users, name='get-all-users'),
    
     path('emails/', EmailViewSet.as_view({'get': 'list', 'post': 'create'}), name='email-list-create'),
