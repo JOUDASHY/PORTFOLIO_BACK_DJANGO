@@ -1,8 +1,13 @@
-# Environnement virtuel
-monenv/
+*.pyc
 
-# Répertoire des uploads
+__pycache__/
+
+.env
+
+*.sqlite3
+
 media/
 
-# Base SQLite
-db.sqlite3
+monenv/
+
+env/
