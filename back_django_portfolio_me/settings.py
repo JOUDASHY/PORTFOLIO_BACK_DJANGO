@@ -90,7 +90,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://portfolio-nilsen.onrender.com",
     "https://nilsen.onrender.com",
     "https://facebook-login-0lue.onrender.com",
-    "https://areagreen.onrender.com"
+    "https://areagreen.onrender.com",
+    "https://portfolio-nilsen.unityfianar.site"
 ]
 
 
