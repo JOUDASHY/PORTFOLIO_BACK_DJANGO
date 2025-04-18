@@ -1,4 +1,8 @@
+# Environnement virtuel
+monenv/
 
-monenv
-media
+# Répertoire des uploads
+media/
+
+# Base SQLite
 db.sqlite3
