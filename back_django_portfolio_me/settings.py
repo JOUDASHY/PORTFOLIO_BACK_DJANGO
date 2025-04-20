@@ -164,7 +164,10 @@ DATABASES = {
         'PASSWORD': os.environ.get('DB_PASSWORD'),
         'HOST': os.environ.get('DB_HOST'),
         'PORT': os.environ.get('DB_PORT'),
-        'CONN_MAX_AGE': None,
+        'CONN_MAX_AGE': 300,  # Active le recyclage des connexions
+        'OPTIONS': {
+            'connect_timeout': 30,
+        }
     }
 }
 
