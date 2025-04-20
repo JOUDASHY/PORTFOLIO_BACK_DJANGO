@@ -164,7 +164,6 @@ DATABASES = {
         'PASSWORD': os.environ.get('DB_PASSWORD'),
         'HOST': os.environ.get('DB_HOST'),
         'PORT': os.environ.get('DB_PORT'),
-                # Active la connexion persistante pendant 60 secondes
         'CONN_MAX_AGE': 600,
     }
 }
