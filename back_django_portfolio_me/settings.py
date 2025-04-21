@@ -158,19 +158,34 @@ REST_FRAMEWORK = {
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',  # ← il faut une virgule ici
-
+        'ENGINE': 'django.db.backends.mysql',
         'NAME': os.environ.get('DB_DATABASE'),
         'USER': os.environ.get('DB_USERNAME'),
         'PASSWORD': os.environ.get('DB_PASSWORD'),
         'HOST': os.environ.get('DB_HOST'),
         'PORT': os.environ.get('DB_PORT'),
-        'CONN_MAX_AGE': 300,  # Active le recyclage des connexions
+
+        # Garde la connexion vivante jusque 5 minutes, puis la recycle.
+        'CONN_MAX_AGE': 300,
+
         'OPTIONS': {
-            'connect_timeout': 30,
-        }
+            # À la connexion, force des timeouts longs côté session MySQL
+            'init_command': (
+                "SET SESSION wait_timeout=28800, "
+                "SESSION interactive_timeout=28800, "
+                "SESSION sql_mode='STRICT_TRANS_TABLES'"
+            ),
+            # Timeout pour établir la connexion
+            'connect_timeout': 10,
+            # Timeout pour envoyer/recevoir les paquets
+            'read_timeout': 30,
+            'write_timeout': 30,
+            # Assure la compatibilité UTF‑8 étendue
+            'charset': 'utf8mb4',
+        },
     }
 }
+
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
