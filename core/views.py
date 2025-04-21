@@ -657,6 +657,7 @@ class EmailViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == 'create':  # Autoriser l'accès public uniquement pour POST
             return [AllowAny()]
+
         return [IsAuthenticated()]
         
     def create(self, request, *args, **kwargs):
@@ -667,23 +668,18 @@ class EmailViewSet(viewsets.ModelViewSet):
         if response.status_code == status.HTTP_201_CREATED:
             # Récupérer l'adresse email du client
             client_email = request.data.get('email')
-            print(f"Email client reçu: {client_email}")  # Log pour débogage
             
             # Envoyer un email de confirmation automatique
             if client_email:
-                try:
-                    send_mail(
-                        subject="Confirmation de réception de votre message",
-                        message="Merci d'avoir envoyé votre message. Nous allons vous répondre dans les plus brefs délais.",
-                        from_email=settings.EMAIL_HOST_USER,
-                        recipient_list=[client_email],
-                        fail_silently=False,  # Afficher les erreurs
-                    )
-                    print(f"Email de confirmation envoyé à {client_email}")  # Log pour débogage
-                except Exception as e:
-                    print(f"Erreur lors de l'envoi de l'email: {str(e)}")  # Log pour débogage
-                    
-        return response    
+                send_mail(
+                    subject="Confirmation de réception de votre message",
+                    message="Merci d'avoir envoyé votre message. Nous allons vous répondre dans les plus brefs délais.",
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=[client_email],
+                    fail_silently=True,  # Ne pas lever d'exception en cas d'échec
+                )
+                
+        return response
 class EmailResponseViewSet(viewsets.ModelViewSet):
     queryset = EmailResponse.objects.all()
     serializer_class = EmailResponseSerializer
