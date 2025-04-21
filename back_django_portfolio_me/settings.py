@@ -166,23 +166,12 @@ DATABASES = {
         'PORT': os.environ.get('DB_PORT'),
 
         # Garde la connexion vivante jusque 5 minutes, puis la recycle.
-        'CONN_MAX_AGE': 300,
-
+        'CONN_MAX_AGE': 60,  # Doit être < wait_timeout de Hostinger (généralement 300s)
         'OPTIONS': {
-            # À la connexion, force des timeouts longs côté session MySQL
-            'init_command': (
-                "SET SESSION wait_timeout=28800, "
-                "SESSION interactive_timeout=28800, "
-                "SESSION sql_mode='STRICT_TRANS_TABLES'"
-            ),
-            # Timeout pour établir la connexion
-            'connect_timeout': 10,
-            # Timeout pour envoyer/recevoir les paquets
+            'connect_timeout': 30,
             'read_timeout': 30,
             'write_timeout': 30,
-            # Assure la compatibilité UTF‑8 étendue
-            'charset': 'utf8mb4',
-        },
+        }
     }
 }
 
