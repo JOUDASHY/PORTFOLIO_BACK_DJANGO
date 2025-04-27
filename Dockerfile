@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Installer les dépendances système nécessaires
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-       build-essential libmysqlclient-dev \
+    build-essential libmariadb-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Créer et positionner le répertoire de travail
