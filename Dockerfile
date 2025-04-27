@@ -10,6 +10,7 @@ RUN apt-get update \
        python3.11 \
        python3.11-venv \
        python3-pip \
+       python3.11-dev \  # Ajouté pour inclure les en-têtes de développement Python
        build-essential \
        pkg-config \
        libmariadb-dev \
