@@ -165,13 +165,13 @@ DATABASES = {
         'HOST': os.environ.get('DB_HOST'),
         'PORT': os.environ.get('DB_PORT'),
 
-        # Garde la connexion vivante jusque 5 minutes, puis la recycle.
-        'CONN_MAX_AGE': 60,  # Doit être < wait_timeout de Hostinger (généralement 300s)
+        # Ne jamais fermer les connexions automatiquement
+        'CONN_MAX_AGE': None,
+
+        # Options spécifiques (ici SSL pour MySQL)
         'OPTIONS': {
-            'connect_timeout': 30,
-            'read_timeout': 30,
-            'write_timeout': 30,
-        }
+            'ssl': {'ssl-mode': 'REQUIRED'},
+        },
     }
 }
 
