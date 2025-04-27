@@ -7,7 +7,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Installer les dépendances système nécessaires
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-    build-essential libmariadb-dev \
+       build-essential \
+       pkg-config \
+       libmariadb-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Créer et positionner le répertoire de travail
