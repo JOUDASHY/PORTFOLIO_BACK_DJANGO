@@ -10,6 +10,11 @@ RUN apt-get update \
        build-essential \
        pkg-config \
        libmariadb-dev \
+       libgirepository1.0-dev \
+       libcairo2-dev \
+       libpango1.0-dev \
+       libgobject-2.0-0 \
+       shared-mime-info \
     && rm -rf /var/lib/apt/lists/*
 
 # Définir le répertoire de travail
