@@ -4,13 +4,13 @@ FROM ubuntu:22.04
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-# Installer les dépendances système nécessaires
+# Installer les dépendances système nécessaires et nettoyer le cache APT
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        python3.11 \
        python3.11-venv \
        python3-pip \
-       python3.11-dev \  # Ajouté pour inclure les en-têtes de développement Python
+       python3.11-dev \
        build-essential \
        pkg-config \
        libmariadb-dev \
@@ -25,13 +25,13 @@ RUN apt-get update \
 WORKDIR /app
 
 # Copier et installer uniquement les dépendances Python d'abord (pour profiter du cache Docker)
-COPY requirements.txt .
+COPY requirements.txt /app/
 RUN python3.11 -m venv /venv \
     && /venv/bin/pip install --upgrade pip \
     && /venv/bin/pip install -r requirements.txt
 
 # Copier le reste de l’application
-COPY . .
+COPY . /app/
 
 # Pointer vers votre settings.py existant
 ENV DJANGO_SETTINGS_MODULE=back_django_portfolio_me.settings
@@ -39,10 +39,11 @@ ENV DJANGO_SETTINGS_MODULE=back_django_portfolio_me.settings
 # Exposer le port HTTP
 EXPOSE 8000
 
-# Lancer les migrations, collectstatic, puis Gunicorn
-CMD ["sh", "-c", "\
+# Commande de démarrage : migrations, collectstatic, puis Gunicorn
+CMD [ "sh", "-c", "\
+    /venv/bin/python -m pip install gunicorn && \
     /venv/bin/python manage.py migrate --no-input && \
     /venv/bin/python manage.py collectstatic --no-input && \
     /venv/bin/gunicorn back_django_portfolio_me.wsgi:application \
       --bind 0.0.0.0:8000 --workers 3 \
-"]
+" ]
