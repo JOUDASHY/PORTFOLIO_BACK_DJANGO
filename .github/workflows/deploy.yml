@@ -31,11 +31,14 @@ jobs:
             echo "📥 Pull latest code"
             git pull origin main
 
-            echo "🐳 Reconstruire uniquement Django"
+            echo "🐳 Supprimer l'ancien conteneur Django (s'il existe)"
+            docker-compose rm -sf django
+
+            echo "🐳 Reconstruire uniquement l'image Django"
             docker-compose build django
 
-            echo "🚀 Relancer uniquement le conteneur Django"
-            docker-compose up -d django
+            echo "🚀 Démarrer uniquement le conteneur Django"
+            docker-compose up -d --no-deps django
 
-            echo "✅ Déploiement terminé avec succès"
+            echo "✅ Déploiement Django terminé avec succès"
           EOF
