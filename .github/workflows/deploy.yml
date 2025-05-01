@@ -24,7 +24,8 @@ jobs:
             set -e
 
             echo "📂 Se déplacer dans le dossier du projet"
-            cd /var/www/PORTFOLIO_NILSEN/back_django_portfolio_me
+            cd /var/www/PORTFOLIO_BACK_DJANGO
+
 
             echo "📥 Pull latest code"
             git pull origin main
