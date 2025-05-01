@@ -1,28 +1,25 @@
-version: '3.8'
-
 services:
   mysql:
-    build:
-      context: .
-      dockerfile: Dockerfile  # Utiliser ton Dockerfile existant pour construire l'image MySQL
+    image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: 4734
-      MYSQL_DATABASE: portfolio_db
+      MYSQL_DATABASE: u614166417_nil_port
       MYSQL_USER: server
       MYSQL_PASSWORD: 4734
     volumes:
       - mysql-data:/var/lib/mysql
       - ./initdb:/docker-entrypoint-initdb.d
     ports:
-      - "3306:3306"
+      - "3308:3306"  # Port externe 3308, interne 3306
     networks:
       - mysql-network
+    restart: unless-stopped  # Ajouté ici
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     environment:
       PMA_HOST: mysql
-      PMA_PORT: 3306
+      PMA_PORT: 3306  # Le port interne du conteneur MySQL
       MYSQL_ROOT_PASSWORD: 4734
     ports:
       - "8080:80"
@@ -30,6 +27,7 @@ services:
       - mysql
     networks:
       - mysql-network
+    restart: unless-stopped  # Ajouté ici
 
 volumes:
   mysql-data:
