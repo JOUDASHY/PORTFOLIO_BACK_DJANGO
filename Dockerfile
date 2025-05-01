@@ -21,29 +21,26 @@ RUN apt-get update \
        shared-mime-info \
     && rm -rf /var/lib/apt/lists/*
 
-# Définir le répertoire de travail
+# Créer et activer le virtuelenv, puis installer requirements
 WORKDIR /app
-
-# Copier et installer uniquement les dépendances Python d'abord (pour profiter du cache Docker)
 COPY requirements.txt /app/
 RUN python3.11 -m venv /venv \
     && /venv/bin/pip install --upgrade pip \
     && /venv/bin/pip install -r requirements.txt
 
-# Copier le reste de l’application
+# Copier le code de l’application
 COPY . /app/
 
-# Pointer vers votre settings.py existant
+# Pointage vers le module settings de Django
 ENV DJANGO_SETTINGS_MODULE=back_django_portfolio_me.settings
 
 # Exposer le port HTTP
 EXPOSE 8000
 
-# Commande de démarrage : migrations, collectstatic, puis Gunicorn
+# Commande de démarrage : install Gunicorn, migrer, collectstatic, puis Gunicorn
 CMD [ "sh", "-c", "\
     /venv/bin/python -m pip install gunicorn && \
     /venv/bin/python manage.py migrate --no-input && \
     /venv/bin/python manage.py collectstatic --no-input && \
     /venv/bin/gunicorn back_django_portfolio_me.wsgi:application \
-      --bind 0.0.0.0:8000 --workers 3 \
-" ]
+      --bind 0.0.0.0:8000 --workers 3" ]

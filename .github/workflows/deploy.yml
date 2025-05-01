@@ -17,24 +17,25 @@ jobs:
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
+          # Démarrer l'agent SSH et ajouter la clé privée
           eval "$(ssh-agent -s)"
           ssh-add - <<< "$SSH_PRIVATE_KEY"
 
+          # Connexion SSH et déploiement sur le serveur
           ssh -o StrictHostKeyChecking=no root@89.116.111.200 << 'EOF'
             set -e
 
             echo "📂 Se déplacer dans le dossier du projet"
             cd /var/www/PORTFOLIO_BACK_DJANGO
 
-
             echo "📥 Pull latest code"
             git pull origin main
 
-            echo "🐳 Arrêter les anciens conteneurs"
+            echo "🐳 Arrêter et supprimer les conteneurs existants"
             docker-compose down
 
-            echo "⚙️ Rebuild et relancer"
+            echo "⚙️ Rebuild et relancer tous les services"
             docker-compose up -d --build
 
-            echo "✅ Déploiement terminé avec docker-compose"
+            echo "✅ Déploiement terminé avec succès"
           EOF
