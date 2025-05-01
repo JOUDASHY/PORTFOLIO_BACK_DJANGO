@@ -21,6 +21,6 @@ from django.http import HttpResponse
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('core.urls')),
-    path('', lambda request: HttpResponse("Welcome to the fucking Nilsen's API  !")), 
+    path('', lambda request: HttpResponse("Welcome to the fucking Nilsen's API !")), 
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
