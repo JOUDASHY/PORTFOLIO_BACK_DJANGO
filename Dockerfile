@@ -1,7 +1,8 @@
 FROM ubuntu:22.04
 
-# Empêcher la création de fichiers .pyc, buffering et définir TZ
-ENV PYTHONDONTWRITEBYTECODE=1 \
+# Désactiver les prompts interactifs et configurer Python/TZ
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     TZ=UTC
 
@@ -21,10 +22,9 @@ RUN apt-get update \
        libpango1.0-dev \
        libglib2.0-0 \
        shared-mime-info \
+    && ln -fs /usr/share/zoneinfo/UTC /etc/localtime \
+    && dpkg-reconfigure --frontend noninteractive tzdata \
     && rm -rf /var/lib/apt/lists/*
-
-# Répondre automatiquement au prompt de configuration de tzdata
-RUN ln -fs /usr/share/zoneinfo/UTC /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata
 
 WORKDIR /app
 
