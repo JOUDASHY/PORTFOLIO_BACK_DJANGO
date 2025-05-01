@@ -1,12 +1,14 @@
 FROM ubuntu:22.04
 
-# Empêcher la création de fichiers .pyc et activer le buffering stdout/stderr
+# Empêcher la création de fichiers .pyc, buffering et définir TZ
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    TZ=UTC
 
-# Installer les dépendances système nécessaires et nettoyer le cache APT
+# Installer tzdata + autres dépendances système, puis nettoyer
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+       tzdata \
        python3.11 \
        python3.11-venv \
        python3-pip \
@@ -21,23 +23,26 @@ RUN apt-get update \
        shared-mime-info \
     && rm -rf /var/lib/apt/lists/*
 
-# Créer et activer le virtuelenv, puis installer requirements
+# Répondre automatiquement au prompt de configuration de tzdata
+RUN ln -fs /usr/share/zoneinfo/UTC /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata
+
 WORKDIR /app
+
+# Installer Python et créer le venv
 COPY requirements.txt /app/
 RUN python3.11 -m venv /venv \
     && /venv/bin/pip install --upgrade pip \
     && /venv/bin/pip install -r requirements.txt
 
-# Copier le code de l’application
+# Copier l’application
 COPY . /app/
 
-# Pointage vers le module settings de Django
+# Pointer vers le module settings de Django
 ENV DJANGO_SETTINGS_MODULE=back_django_portfolio_me.settings
 
-# Exposer le port HTTP
 EXPOSE 8000
 
-# Commande de démarrage : install Gunicorn, migrer, collectstatic, puis Gunicorn
+# Lancer migrations, collectstatic puis Gunicorn
 CMD [ "sh", "-c", "\
     /venv/bin/python -m pip install gunicorn && \
     /venv/bin/python manage.py migrate --no-input && \
