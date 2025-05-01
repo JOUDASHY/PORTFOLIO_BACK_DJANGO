@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 4734
+      MYSQL_DATABASE: u614166417_nil_port
+      MYSQL_USER: server
+      MYSQL_PASSWORD: 4734
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ../bdd/initdb:/docker-entrypoint-initdb.d
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: 4734
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  django:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: django
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+    restart: unless-stopped
+    env_file:
+      - .env  # pour passer DB config à Django via variables d'environnement
+
+volumes:
+  mysql-data:
+
+networks:
+  app-network:
+    driver: bridge

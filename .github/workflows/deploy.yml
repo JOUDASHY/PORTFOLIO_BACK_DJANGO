@@ -1,50 +1,39 @@
-# .github/workflows/deploy-backend.yml
 name: Deploy Django Backend
 
 on:
   push:
     branches:
-      - main  # Déclenchement du workflow sur push dans la branche main
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Deploy to Server
-      env:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      run: |
-        # Démarrer l'agent SSH et ajouter la clé privée
-        eval "$(ssh-agent -s)"
-        ssh-add - <<< "$SSH_PRIVATE_KEY"
+      - name: Deploy to Server
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          eval "$(ssh-agent -s)"
+          ssh-add - <<< "$SSH_PRIVATE_KEY"
 
-        # Connexion SSH et déploiement
-        ssh -o StrictHostKeyChecking=no root@89.116.111.200 << 'EOF'
-          set -e
+          ssh -o StrictHostKeyChecking=no root@89.116.111.200 << 'EOF'
+            set -e
 
-          cd /var/www/PORTFOLIO_BACK_DJANGO
+            echo "📂 Se déplacer dans le dossier du projet"
+            cd /var/www/PORTFOLIO_NILSEN/back_django_portfolio_me
 
-          echo "📥 Pull latest code"
-          git pull origin main
+            echo "📥 Pull latest code"
+            git pull origin main
 
-          echo "🐳 Build Docker image"
-          docker build -t portfolio-backend .
+            echo "🐳 Arrêter les anciens conteneurs"
+            docker-compose down
 
-          echo "🛑 Stop & remove old container"
-          docker stop portfolio-backend-container || true
-          docker rm   portfolio-backend-container || true
+            echo "⚙️ Rebuild et relancer"
+            docker-compose up -d --build
 
-          echo "🚀 Run new container"
-          docker run -d \
-            --name portfolio-backend-container \
-            --env-file .env \
-            -p 8000:8000 \
-            --restart unless-stopped \
-            portfolio-backend:latest
-
-          echo "✅ Déploiement terminé"
-        EOF
+            echo "✅ Déploiement terminé avec docker-compose"
+          EOF
