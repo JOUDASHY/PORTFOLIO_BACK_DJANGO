@@ -45,6 +45,7 @@ EXPOSE 8000
 # Lancer migrations, collectstatic puis Gunicorn
 CMD [ "sh", "-c", "\
     /venv/bin/python -m pip install gunicorn && \
+    /venv/bin/python manage.py makemigrations --check --dry-run && \
     /venv/bin/python manage.py migrate --no-input && \
     /venv/bin/python manage.py collectstatic --no-input && \
     /venv/bin/gunicorn back_django_portfolio_me.wsgi:application \

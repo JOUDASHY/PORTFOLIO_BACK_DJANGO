@@ -37,6 +37,9 @@ jobs:
             echo "🐳 Reconstruire uniquement l'image Django"
             docker-compose build django
 
+            echo "🔄 Exécuter les migrations"
+            docker-compose run --rm django python manage.py migrate
+
             echo "🚀 Démarrer uniquement le conteneur Django"
             docker-compose up -d --no-deps django
 
