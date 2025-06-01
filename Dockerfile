@@ -34,6 +34,9 @@ RUN python3.11 -m venv /venv \
     && /venv/bin/pip install --upgrade pip \
     && /venv/bin/pip install -r requirements.txt
 
+# Ajouter venv/bin au PATH
+ENV PATH="/venv/bin:$PATH"
+
 # Copier l’application
 COPY . /app/
 
@@ -44,9 +47,9 @@ EXPOSE 8000
 
 # Lancer migrations, collectstatic puis Gunicorn
 CMD [ "sh", "-c", "\
-    /venv/bin/python -m pip install gunicorn && \
-    /venv/bin/python manage.py makemigrations --check --dry-run && \
-    /venv/bin/python manage.py migrate --no-input && \
-    /venv/bin/python manage.py collectstatic --no-input && \
-    /venv/bin/gunicorn back_django_portfolio_me.wsgi:application \
+    pip install gunicorn && \
+    python manage.py makemigrations --check --dry-run && \
+    python manage.py migrate --no-input && \
+    python manage.py collectstatic --no-input && \
+    gunicorn back_django_portfolio_me.wsgi:application \
       --bind 0.0.0.0:8000 --workers 3" ]
