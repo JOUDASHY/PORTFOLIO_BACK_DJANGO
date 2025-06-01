@@ -139,7 +139,7 @@ class ProjetSerializer(serializers.ModelSerializer):
 class ExperienceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Experience
-        fields = ['id', 'date_debut', 'date_fin', 'entreprise', 'type', 'role']
+        fields = ['id', 'date_debut', 'date_fin', 'entreprise', 'type', 'role', 'description']
 class UserRegistrationSerializer(ModelSerializer):
     class Meta:
         model = User
