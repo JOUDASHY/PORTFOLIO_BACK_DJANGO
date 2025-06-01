@@ -37,19 +37,28 @@ jobs:
             echo "🐳 Reconstruire uniquement l'image Django"
             docker-compose build django || exit 1
 
+            echo "📋 Afficher les logs de build"
+            docker-compose logs django
+
             echo "🔄 Exécuter les migrations"
             docker-compose run --rm django python manage.py migrate || exit 1
 
             echo "🚀 Démarrer uniquement le conteneur Django"
             docker-compose up -d --no-deps django || exit 1
             
-            # Vérifier que le conteneur est bien démarré
-            sleep 5
-            if ! docker-compose ps | grep -q "django.*Up"; then
-              echo "❌ Le conteneur Django n'a pas démarré correctement"
-              docker-compose logs django
-              exit 1
-            fi
+            # Vérification plus approfondie du démarrage
+            echo "⏳ Attente du démarrage complet..."
+            for i in $(seq 1 6); do
+              if docker-compose ps | grep -q "django.*Up"; then
+                echo "✅ Conteneur Django démarré avec succès"
+                docker-compose logs django
+                exit 0
+              fi
+              echo "⌛ Tentative $i/6..."
+              sleep 10
+            done
 
-            echo "✅ Déploiement Django terminé avec succès"
+            echo "❌ Échec du démarrage du conteneur Django"
+            docker-compose logs django
+            exit 1
           EOF
