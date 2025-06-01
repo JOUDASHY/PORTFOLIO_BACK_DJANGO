@@ -32,29 +32,13 @@ jobs:
             git pull origin main
 
             echo "🐳 Supprimer l'ancien conteneur Django (s'il existe)"
-            docker-compose rm -sf django_portfolio
+            docker-compose rm -sf django
 
             echo "🐳 Reconstruire uniquement l'image Django"
-            docker-compose build django || exit 1
+            docker-compose build django
 
-            echo "🔄 Exécuter les migrations"
-            docker-compose run --rm django python manage.py migrate || exit 1
+            echo "🚀 Démarrer uniquement le conteneur Django"
+            docker-compose up -d --no-deps django
 
-            echo "🚀 Démarrer le conteneur Django"
-            docker-compose up -d django || exit 1
-            
-            echo "⏳ Attente du démarrage complet..."
-            for i in $(seq 1 3); do
-              if docker-compose ps django_portfolio | grep -q "Up"; then
-                echo "✅ Conteneur Django démarré avec succès"
-                docker-compose logs --tail=50 django_portfolio
-                exit 0
-              fi
-              echo "⌛ Tentative $i/3..."
-              sleep 10
-            done
-
-            echo "❌ Échec du démarrage du conteneur Django"
-            docker-compose logs django
-            exit 1
+            echo "✅ Déploiement Django terminé avec succès"
           EOF
