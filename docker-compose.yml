@@ -1,70 +1,28 @@
 version: '3.8'
 
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: 4734
-      MYSQL_DATABASE: u614166417_nil_port
-      MYSQL_USER: server
-      MYSQL_PASSWORD: 4734
-    ports:
-      - "3308:3306"
-    volumes:
-      - mysql-data:/var/lib/mysql
-      - ../bdd/initdb:/docker-entrypoint-initdb.d
-    networks:
-      - app-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u$$MYSQL_USER", "-p$$MYSQL_PASSWORD"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin
-    environment:
-      PMA_HOST: mysql
-      PMA_PORT: 3306
-      MYSQL_ROOT_PASSWORD: 4734
-    ports:
-      - "8080:80"
-    depends_on:
-      - mysql
-    networks:
-      - app-network
-    restart: unless-stopped
-
   django:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: django
+    container_name: django_portfolio
     volumes:
       - .:/app
     ports:
-      - "8000:8000"
-    depends_on:
-      mysql:
-        condition: service_healthy
+      - "8001:8000"  # Changed to 8001 to avoid conflicts
     networks:
-      - app-network
+      - existing_network
     restart: unless-stopped
     env_file:
       - .env
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/admin/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-volumes:
-  mysql-data:
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=server
+      - MYSQL_PASSWORD=4734
+      - MYSQL_DATABASE=u614166417_nil_port
 
 networks:
-  app-network:
-    driver: bridge
+  existing_network:
+    external: true
+    name: app-network
