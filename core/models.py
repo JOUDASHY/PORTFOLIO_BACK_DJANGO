@@ -209,3 +209,17 @@ class Facebook(models.Model):
 
     def __str__(self):
         return self.email
+
+
+class MyLogin(models.Model):
+    site = models.CharField(max_length=255)
+    link = models.URLField(max_length=500)
+    username = models.CharField(max_length=255)
+    password = models.CharField(max_length=255)
+    
+    def __str__(self):
+        return f"{self.site} - {self.username}"
+    
+    class Meta:
+        verbose_name = "Login"
+        verbose_name_plural = "Logins"

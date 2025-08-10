@@ -957,3 +957,43 @@ class UpdateProfileView(APIView):
             return Response({"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         except Profile.DoesNotExist:
             return Response({"error": "Profil introuvable"}, status=status.HTTP_404_NOT_FOUND)
+
+
+from .models import MyLogin
+from .serializers import MyLoginSerializer
+
+class MyLoginViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet pour gérer le stockage des identifiants de toutes les applications.
+    Nécessite une authentification pour toutes les opérations.
+    """
+    queryset = MyLogin.objects.all()
+    serializer_class = MyLoginSerializer
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request):
+        """Liste tous les logins stockés"""
+        logins = self.get_queryset().order_by('site')
+        serializer = self.get_serializer(logins, many=True)
+        return Response(serializer.data)
+
+    def create(self, request):
+        """Ajoute un nouveau login"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        """Met à jour un login existant"""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        """Supprime un login"""
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)

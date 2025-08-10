@@ -24,6 +24,7 @@ from rest_framework import serializers
 from .models import Rating
 from .models import Notification
 from .models import Facebook
+from .models import MyLogin
 
 class FacebookSerializer(serializers.ModelSerializer):
     class Meta:
@@ -190,3 +191,7 @@ class EducationSerializer(serializers.ModelSerializer):
         fields = '__all__'  # Inclut tous les champs du modèle
 
 
+class MyLoginSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MyLogin
+        fields = ['id', 'site', 'link', 'username', 'password']

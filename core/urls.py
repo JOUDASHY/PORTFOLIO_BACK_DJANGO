@@ -33,7 +33,8 @@ from .views import (
     mark_all_notifications_as_read,
     clear_all_notifications,
     FacebookList,
-    KeepAliveView
+    KeepAliveView,
+    MyLoginViewSet
 
     )
 
@@ -100,5 +101,14 @@ urlpatterns = [
     path('facebook/', FacebookList.as_view(), name='facebook-list-create'),
     path('facebook/<int:pk>/', FacebookList.as_view(), name='facebook-delete'),  # Route pour la suppression
     path('keep-alive/', KeepAliveView.as_view(), name="keep_alive"),
-
+    path(
+        'all_my_logins/',
+        MyLoginViewSet.as_view({'get': 'list', 'post': 'create'}),
+        name='all-my-logins'
+    ),
+    path(
+        'all_my_logins/<int:pk>/',
+        MyLoginViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}),
+        name='all-my-logins-detail'
+    ),
 ]    
