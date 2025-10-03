@@ -87,11 +87,13 @@ CORS_ALLOWED_ORIGINS = [
     "http://192.168.43.135:5173",     # Adresse IP et port du frontend
     "http://192.168.43.135:5174",     # Adresse IP et port du frontend
     "http://localhost:5174",     # Adresse IP et port du frontend
+    "http://localhost:3000",     # Adresse IP et port du frontend
     "https://portfolio-nilsen.onrender.com",
     "https://nilsen.onrender.com",
     "https://facebook-login-0lue.onrender.com",
     "https://areagreen.onrender.com",
-    "https://portfolio-nilsen.unityfianar.site"
+    "https://portfolio-nilsen.unityfianar.site",
+    "https://portfolio-refonte-fe3qoza59-joudashys-projects.vercel.app"
 ]
 
 
