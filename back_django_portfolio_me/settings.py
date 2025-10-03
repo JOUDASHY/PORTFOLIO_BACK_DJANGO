@@ -93,7 +93,9 @@ CORS_ALLOWED_ORIGINS = [
     "https://facebook-login-0lue.onrender.com",
     "https://areagreen.onrender.com",
     "https://portfolio-nilsen.unityfianar.site",
+    "https://portfolio-refonte.vercel.app",
     "https://portfolio-refonte-fe3qoza59-joudashys-projects.vercel.app"
+    
 ]
 
 
