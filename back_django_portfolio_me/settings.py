@@ -79,6 +79,9 @@ MIDDLEWARE = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# Public base URL for building absolute media links
+BASE_URL = os.environ.get('BASE_URL', 'https://portfolio.unityfianar.site')
+
 ROOT_URLCONF = 'back_django_portfolio_me.urls'
 CORS_ALLOW_ALL_ORIGINS = False  # Désactive l'autorisation universelle
 
@@ -226,15 +229,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# CLOUDINARY_STORAGE = {
-#     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
-#     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
-#     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
-# }
-
-# DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
 
 
 EXTERNAL_FILES_DIR = '/home/server/Téléchargements'

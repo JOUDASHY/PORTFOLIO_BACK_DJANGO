@@ -25,6 +25,23 @@ from .models import Rating
 from .models import Notification
 from .models import Facebook
 from .models import MyLogin
+from django.conf import settings
+
+
+class _AbsoluteMediaUrlMixin:
+    def _absolute_media_url(self, file_field):
+        if not file_field:
+            return None
+        url = getattr(file_field, 'url', None)
+        if not url:
+            return None
+        # If already absolute, return as-is
+        if url.startswith('http://') or url.startswith('https://'):
+            return url
+        base = getattr(settings, 'BASE_URL', '').rstrip('/')
+        media_prefix = getattr(settings, 'MEDIA_URL', '/media/').strip('/')
+        # Ensure single slashes when joining
+        return f"{base}/{media_prefix}/{url.lstrip('/')}".replace('//', '/').replace(':/', '://')
 
 class FacebookSerializer(serializers.ModelSerializer):
     class Meta:
@@ -63,10 +80,15 @@ class AwardSerializer(serializers.ModelSerializer):
 
 
 
-class CompetenceSerializer(serializers.ModelSerializer):
+class CompetenceSerializer(_AbsoluteMediaUrlMixin, serializers.ModelSerializer):
     class Meta:
         model = Competence
         fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['image'] = self._absolute_media_url(instance.image)
+        return data
 
 
         
@@ -117,10 +139,15 @@ class EmailSerializer(serializers.ModelSerializer):
 
         
 
-class ImageProjetSerializer(serializers.ModelSerializer):
+class ImageProjetSerializer(_AbsoluteMediaUrlMixin, serializers.ModelSerializer):
     class Meta:
         model = ImageProjet
         fields = ['id', 'projet', 'image']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['image'] = self._absolute_media_url(instance.image)
+        return data
 
 
 class ProjetSerializer(serializers.ModelSerializer):
@@ -162,7 +189,7 @@ class UserRegistrationSerializer(ModelSerializer):
         return user
 
 
-class ProfileSerializer(serializers.ModelSerializer):
+class ProfileSerializer(_AbsoluteMediaUrlMixin, serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = [
@@ -170,6 +197,11 @@ class ProfileSerializer(serializers.ModelSerializer):
             'link_facebook', 'link_linkedin', 'link_github',
             'phone_number', 'address'
         ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['image'] = self._absolute_media_url(instance.image)
+        return data
 
 
 class UserDetailSerializer(ModelSerializer):
@@ -185,10 +217,15 @@ class UserDetailSerializer(ModelSerializer):
 
 
 
-class EducationSerializer(serializers.ModelSerializer):
+class EducationSerializer(_AbsoluteMediaUrlMixin, serializers.ModelSerializer):
     class Meta:
         model = Education
         fields = '__all__'  # Inclut tous les champs du modèle
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['image'] = self._absolute_media_url(instance.image)
+        return data
 
 
 class MyLoginSerializer(serializers.ModelSerializer):
