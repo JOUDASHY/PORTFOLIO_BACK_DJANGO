@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework_simplejwt import views as jwt_views
-from .views import (
+from .api import (
     RegisterView, 
     LoginView, 
     LogoutView, 
@@ -19,8 +19,7 @@ from .views import (
     PasswordResetConfirmView,
     ProjetViewSet, ImageProjetViewSet,
     CompetenceViewSet,
-    FormationViewSet,
-   
+    FormationViewSet,   
     AwardViewSet,
     RatingView,
     ChangePasswordView,
@@ -40,7 +39,7 @@ from .views import (
 
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import NilsenProfileView
+from .api import NilsenProfileView
 
 
 urlpatterns = [
