@@ -39,9 +39,13 @@ class _AbsoluteMediaUrlMixin:
         if url.startswith('http://') or url.startswith('https://'):
             return url
         base = getattr(settings, 'BASE_URL', '').rstrip('/')
-        media_prefix = getattr(settings, 'MEDIA_URL', '/media/').strip('/')
-        # Ensure single slashes when joining
-        return f"{base}/{media_prefix}/{url.lstrip('/')}".replace('//', '/').replace(':/', '://')
+        media_url = getattr(settings, 'MEDIA_URL', '/media/')
+        # If URL already starts with MEDIA_URL, just prepend BASE_URL
+        # Django's file_field.url already returns URLs starting with MEDIA_URL (e.g., /media/...)
+        if url.startswith(media_url):
+            return f"{base}{url}"
+        # Otherwise, construct the full URL
+        return f"{base}{media_url.rstrip('/')}/{url.lstrip('/')}"
 
 class FacebookSerializer(serializers.ModelSerializer):
     class Meta:

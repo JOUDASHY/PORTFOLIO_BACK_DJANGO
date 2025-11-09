@@ -1,9 +1,11 @@
+import os
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth.models import User
 from rest_framework.exceptions import NotFound
+from django.core.files.storage import default_storage
 
 from core.models import Profile
 from core.serializers import ProfileSerializer
@@ -28,42 +30,67 @@ class UpdateProfileView(APIView):
 
     def put(self, request):
         try:
-            profile = request.user.profile
-            old_image_path = profile.image.path if profile.image else None
+            profile, created = Profile.objects.get_or_create(user=request.user)
+            # Save old image info before update
+            old_image = profile.image
+            old_image_path = None
+            old_image_name = None
+            if old_image:
+                old_image_path = old_image.path
+                old_image_name = old_image.name
+            
             serializer = ProfileSerializer(profile, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
-                new_image_path = profile.image.path if profile.image else None
-                if old_image_path and old_image_path != new_image_path:
-                    from django.core.files.storage import default_storage
-                    default_storage.delete(old_image_path)
+                # Reload profile to get updated image
+                profile.refresh_from_db()
+                
+                # Delete old image if a new one was uploaded and it's different
+                if old_image_path and old_image_name:
+                    new_image_name = profile.image.name if profile.image else None
+                    # If image changed (new image uploaded or image was removed)
+                    if old_image_name != new_image_name:
+                        if default_storage.exists(old_image_path):
+                            os.remove(old_image_path)
+                
                 return Response({"message": "Profil mis à jour avec succès", "data": serializer.data}, status=status.HTTP_200_OK)
             return Response({"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        except Profile.DoesNotExist:
-            return Response({"error": "Profil introuvable"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": f"Une erreur s'est produite: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class NilsenProfileView(APIView):
     permission_classes = [AllowAny]
+    
     def get(self, request):
         try:
             user = User.objects.get(id=1)
         except User.DoesNotExist:
             raise NotFound("User with id=1 does not exist.")
 
-        data = {
-            "username": user.username,
-            "email": user.email,
-            "id": user.id,
-            "image": user.profile.image.url if hasattr(user, 'profile') and user.profile.image else None,
-            "about": getattr(user.profile, 'about', 'No description available'),
-            "date_of_birth": getattr(user.profile, 'date_of_birth', None),
-            "link_facebook": getattr(user.profile, 'link_facebook', None),
-            "link_github": getattr(user.profile, 'link_github', None),
-            "link_linkedin": getattr(user.profile, 'link_linkedin', None),
-            "phone_number": getattr(user.profile, 'phone_number', None),
-            "address": getattr(user.profile, 'address', None),
-        }
+        # Use serializer to get absolute URL for image
+        if hasattr(user, 'profile'):
+            profile_data = ProfileSerializer(user.profile).data
+            data = {
+                "username": user.username,
+                "email": user.email,
+                "id": user.id,
+                **profile_data
+            }
+        else:
+            data = {
+                "username": user.username,
+                "email": user.email,
+                "id": user.id,
+                "image": None,
+                "about": 'No description available',
+                "date_of_birth": None,
+                "link_facebook": None,
+                "link_github": None,
+                "link_linkedin": None,
+                "phone_number": None,
+                "address": None,
+            }
         return Response(data, status=status.HTTP_200_OK)
 
 
