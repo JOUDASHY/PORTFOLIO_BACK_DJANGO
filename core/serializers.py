@@ -25,6 +25,7 @@ from .models import Rating
 from .models import Notification
 from .models import Facebook
 from .models import MyLogin
+from .models import CV
 from django.conf import settings
 
 
@@ -236,3 +237,20 @@ class MyLoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyLogin
         fields = ['id', 'site', 'link', 'username', 'password']
+
+
+class CVSerializer(serializers.ModelSerializer):
+    file_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CV
+        fields = ['id', 'file', 'file_url', 'uploaded_at', 'is_active']
+        read_only_fields = ['id', 'uploaded_at', 'file_url']
+
+    def get_file_url(self, obj):
+        if obj.file:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.file.url)
+            return obj.file.url
+        return None

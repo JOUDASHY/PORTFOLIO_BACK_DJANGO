@@ -20,6 +20,7 @@ from core.views_pkg.emails import EmailViewSet, EmailResponseViewSet, SendEmailV
 from core.views_pkg.facebook import FacebookList
 from core.views_pkg.mylogin import MyLoginViewSet
 from core.views_pkg.system import KeepAliveView, get_all_users
+from core.views_pkg.cv import CVView, CVListView
 
 __all__ = [
     'RegisterView','LoginView','LogoutView','ChangePasswordView',
@@ -31,6 +32,7 @@ __all__ = [
     'EducationViewSet','ExperienceViewSet','AwardViewSet','LangueViewSet',
     'RatingView','RecordVisit','TotalVisits','MonthlyVisitStats',
     'EmailViewSet','EmailResponseViewSet','SendEmailView','HistoricMailListView',
-    'FacebookList','KeepAliveView','get_all_users','MyLoginViewSet'
+    'FacebookList','KeepAliveView','get_all_users','MyLoginViewSet',
+    'CVView','CVListView'
 ]
 

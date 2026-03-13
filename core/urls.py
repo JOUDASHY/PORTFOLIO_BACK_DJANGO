@@ -33,7 +33,9 @@ from .api import (
     clear_all_notifications,
     FacebookList,
     KeepAliveView,
-    MyLoginViewSet
+    MyLoginViewSet,
+    CVView,
+    CVListView
 
     )
 
@@ -110,4 +112,6 @@ urlpatterns = [
         MyLoginViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}),
         name='all-my-logins-detail'
     ),
+    path('cv/', CVView.as_view(), name='cv-detail'),
+    path('cv/list/', CVListView.as_view(), name='cv-list'),
 ]    

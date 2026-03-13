@@ -223,3 +223,32 @@ class MyLogin(models.Model):
     class Meta:
         verbose_name = "Login"
         verbose_name_plural = "Logins"
+
+
+class CV(models.Model):
+    """Model for storing CV PDF file"""
+    file = models.FileField(
+        upload_to='cv/',
+        validators=[FileExtensionValidator(allowed_extensions=['pdf'])]
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"CV - {self.uploaded_at.strftime('%Y-%m-%d %H:%M')}"
+
+    class Meta:
+        verbose_name = "CV"
+        verbose_name_plural = "CVs"
+
+    def save(self, *args, **kwargs):
+        # Ensure only one active CV at a time
+        if self.is_active:
+            CV.objects.filter(is_active=True).update(is_active=False)
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        # Delete the file when the model instance is deleted
+        if self.file:
+            self.file.delete(save=False)
+        super().delete(*args, **kwargs)
