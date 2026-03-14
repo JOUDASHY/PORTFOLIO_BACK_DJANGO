@@ -26,6 +26,7 @@ from .models import Notification
 from .models import Facebook
 from .models import MyLogin
 from .models import CV
+from .models import MessageTemplate, Prospect, ProspectNote, ProspectMessage
 from django.conf import settings
 
 
@@ -254,3 +255,89 @@ class CVSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.file.url)
             return obj.file.url
         return None
+
+
+# =====================================================
+# PROSPECTING SERIALIZERS
+# =====================================================
+
+class MessageTemplateSerializer(serializers.ModelSerializer):
+    usage_type_display = serializers.CharField(source='get_usage_type_display', read_only=True)
+    stage_display = serializers.CharField(source='get_stage_display', read_only=True)
+    
+    class Meta:
+        model = MessageTemplate
+        fields = [
+            'id', 'name', 'language', 'stage', 'stage_display', 
+            'usage_type', 'usage_type_display', 'subject', 'body', 
+            'cover_letter_html', 'is_default', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class ProspectNoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProspectNote
+        fields = ['id', 'prospect', 'content', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+
+class ProspectMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProspectMessage
+        fields = ['id', 'prospect', 'template', 'subject', 'body', 'status', 'sent_at', 'created_at']
+        read_only_fields = ['id', 'sent_at', 'created_at']
+
+
+class ProspectSerializer(serializers.ModelSerializer):
+    notes = ProspectNoteSerializer(many=True, read_only=True)
+    messages = ProspectMessageSerializer(many=True, read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    source_display = serializers.CharField(source='get_source_display', read_only=True)
+
+    class Meta:
+        model = Prospect
+        fields = [
+            'id', 'company_name', 'contact_name', 'email', 'phone',
+            'address', 'city', 'google_maps_url', 'website_url', 'has_website',
+            'has_facebook', 'status', 'status_display', 'estimated_value',
+            'source', 'source_display', 'notes', 'messages', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class ProspectListSerializer(serializers.ModelSerializer):
+    """Lighter serializer for list view"""
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    notes_count = serializers.SerializerMethodField()
+    messages_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Prospect
+        fields = [
+            'id', 'company_name', 'contact_name', 'email', 'phone',
+            'status', 'status_display', 'estimated_value', 'city',
+            'notes_count', 'messages_count', 'created_at', 'updated_at'
+        ]
+
+    def get_notes_count(self, obj):
+        return obj.prospect_notes.count()
+
+    def get_messages_count(self, obj):
+        return obj.messages.count()
+
+
+class ProspectStatsSerializer(serializers.Serializer):
+    """Serializer for dashboard stats"""
+    total_prospects = serializers.IntegerField()
+    new = serializers.IntegerField()
+    contacted = serializers.IntegerField()
+    interested = serializers.IntegerField()
+    proposal_sent = serializers.IntegerField()
+    negotiation = serializers.IntegerField()
+    won = serializers.IntegerField()
+    lost = serializers.IntegerField()
+    conversion_rate = serializers.CharField()
+    estimated_revenue = serializers.DecimalField(max_digits=10, decimal_places=2)
+    won_revenue = serializers.DecimalField(max_digits=10, decimal_places=2)
+    average_deal_value = serializers.DecimalField(max_digits=10, decimal_places=2)

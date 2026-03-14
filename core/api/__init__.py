@@ -21,6 +21,11 @@ from core.views_pkg.facebook import FacebookList
 from core.views_pkg.mylogin import MyLoginViewSet
 from core.views_pkg.system import KeepAliveView, get_all_users
 from core.views_pkg.cv import CVView, CVListView
+from core.views_pkg.prospecting import (
+    ProspectViewSet, ProspectStatusView, ProspectStatsView,
+    ProspectNoteViewSet, ProspectMessageView, ProspectMessageSendView,
+    ProspectMessagePreviewView, MessageTemplateViewSet
+)
 
 __all__ = [
     'RegisterView','LoginView','LogoutView','ChangePasswordView',
@@ -33,6 +38,9 @@ __all__ = [
     'RatingView','RecordVisit','TotalVisits','MonthlyVisitStats',
     'EmailViewSet','EmailResponseViewSet','SendEmailView','HistoricMailListView',
     'FacebookList','KeepAliveView','get_all_users','MyLoginViewSet',
-    'CVView','CVListView'
+    'CVView','CVListView',
+    'ProspectViewSet','ProspectStatusView','ProspectStatsView',
+    'ProspectNoteViewSet','ProspectMessageView','ProspectMessageSendView',
+    'ProspectMessagePreviewView','MessageTemplateViewSet'
 ]
 

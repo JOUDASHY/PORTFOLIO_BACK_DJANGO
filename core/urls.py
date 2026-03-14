@@ -35,7 +35,10 @@ from .api import (
     KeepAliveView,
     MyLoginViewSet,
     CVView,
-    CVListView
+    CVListView,
+    ProspectViewSet, ProspectStatusView, ProspectStatsView,
+    ProspectNoteViewSet, ProspectMessageView, ProspectMessageSendView,
+    ProspectMessagePreviewView, MessageTemplateViewSet
 
     )
 
@@ -114,4 +117,19 @@ urlpatterns = [
     ),
     path('cv/', CVView.as_view(), name='cv-detail'),
     path('cv/list/', CVListView.as_view(), name='cv-list'),
+    
+    # =====================================================
+    # PROSPECTING ROUTES
+    # =====================================================
+    path('prospects/', ProspectViewSet.as_view({'get': 'list', 'post': 'create'}), name='prospect-list-create'),
+    path('prospects/<int:pk>/', ProspectViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='prospect-detail'),
+    path('prospects/<int:pk>/status/', ProspectStatusView.as_view(), name='prospect-status'),
+    path('prospects/stats/', ProspectStatsView.as_view(), name='prospect-stats'),
+    path('prospects/<int:prospect_pk>/notes/', ProspectNoteViewSet.as_view({'get': 'list', 'post': 'create'}), name='prospect-notes'),
+    path('prospects/<int:prospect_pk>/notes/<int:pk>/', ProspectNoteViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='prospect-note-detail'),
+    path('prospects/<int:prospect_id>/messages/', ProspectMessageView.as_view(), name='prospect-messages'),
+    path('prospects/<int:prospect_id>/messages/send/', ProspectMessageSendView.as_view(), name='prospect-message-send'),
+    path('prospects/<int:prospect_id>/messages/preview/', ProspectMessagePreviewView.as_view(), name='prospect-message-preview'),
+    path('message-templates/', MessageTemplateViewSet.as_view({'get': 'list', 'post': 'create'}), name='template-list-create'),
+    path('message-templates/<int:pk>/', MessageTemplateViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='template-detail'),
 ]    

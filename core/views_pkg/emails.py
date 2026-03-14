@@ -23,11 +23,53 @@ class SendEmailView(APIView):
         nom_entreprise = request.data.get('nomEntreprise')
         email_entreprise = request.data.get('emailEntreprise')
         lieu_entreprise = request.data.get('lieuEntreprise')
+        
+        # Optionnel: Utiliser un template
+        template_id = request.data.get('template_id')
+        custom_subject = request.data.get('custom_subject')
+        custom_body = request.data.get('custom_body')
+        
         subject = "Demande de stage"
-        message = f'''Cher(e) Monsieur/Madame le/la responsable {nom_entreprise},
-Je me permets de vous contacter afin de postuler pour un stage au sein de votre entreprise {nom_entreprise} . Je suis actuellement étudiant 3 ème année de licence en Informatique à l'ENI, et je suis très intéressé par l'opportunité de rejoindre votre entreprise pour compléter ma formation pratique.
-
-Je suis particulièrement attiré par le développement Web Django, devops et administration Système et réseaux, et je suis convaincu que ce stage me permettrait d'acquérir des compétences précieuses dans le domaine.Voilà ainsi de suite mon CV et ma lettre de motivation'''
+        message = None
+        
+        # Si template fourni, charger et personnaliser
+        if template_id:
+            from core.models import MessageTemplate
+            try:
+                template = MessageTemplate.objects.get(pk=template_id, usage_type='internship')
+                
+                # Variables à remplacer
+                variables = {
+                    '{company_name}': nom_entreprise or '',
+                    '{contact_name}': request.data.get('contact_name', ''),
+                    '{city}': lieu_entreprise or '',
+                    '{student_name}': request.data.get('student_name', 'Eddy Nilsen'),
+                    '{school_name}': request.data.get('school_name', 'ENI'),
+                    '{internship_type}': request.data.get('internship_type', 'développement web'),
+                    '{internship_duration}': request.data.get('internship_duration', '3 mois'),
+                    '{internship_start_date}': request.data.get('internship_start_date', ''),
+                    '{email}': request.data.get('user_email', ''),
+                    '{phone}': request.data.get('user_phone', ''),
+                }
+                
+                # Utiliser custom ou template
+                subject = custom_subject or template.subject
+                message = custom_body or template.body
+                
+                # Remplacer les variables
+                for var, value in variables.items():
+                    subject = subject.replace(var, str(value))
+                    message = message.replace(var, str(value))
+                    
+            except MessageTemplate.DoesNotExist:
+                pass
+        
+        # Fallback: utiliser l'ancien message statique
+        if not message:
+            subject = custom_subject or "Demande de stage"
+            message = custom_body or f'''Cher(e) Monsieur/Madame le/la responsable {nom_entreprise},
+Je me permets de vous contacter afin de postuler pour un stage au sein de votre entreprise {nom_entreprise}...'''
+        
         from_email = settings.EMAIL_HOST_USER
         to_mail = email_entreprise
         pdf_file = self.generate_pdf(nom_entreprise, email_entreprise, lieu_entreprise)

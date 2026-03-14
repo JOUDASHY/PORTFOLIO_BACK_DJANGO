@@ -252,3 +252,137 @@ class CV(models.Model):
         if self.file:
             self.file.delete(save=False)
         super().delete(*args, **kwargs)
+
+
+# =====================================================
+# PROSPECTING MODULE
+# =====================================================
+
+class MessageTemplate(models.Model):
+    """Reusable message templates for prospecting AND internship requests"""
+    LANGUAGE_CHOICES = [
+        ('fr', 'Français'),
+        ('en', 'English'),
+    ]
+    STAGE_CHOICES = [
+        ('initial', 'Initial Contact'),
+        ('follow_up', 'Follow Up'),
+        ('proposal', 'Proposal'),
+        ('closing', 'Closing'),
+    ]
+    USAGE_TYPE_CHOICES = [
+        ('prospecting', 'Prospecting (Sales)'),
+        ('internship', 'Internship Request'),
+    ]
+    
+    name = models.CharField(max_length=100)
+    language = models.CharField(max_length=2, choices=LANGUAGE_CHOICES, default='fr')
+    stage = models.CharField(max_length=20, choices=STAGE_CHOICES, default='initial')
+    usage_type = models.CharField(
+        max_length=20, 
+        choices=USAGE_TYPE_CHOICES, 
+        default='prospecting'
+    )
+    subject = models.CharField(max_length=255, blank=True)
+    body = models.TextField()
+    cover_letter_html = models.TextField(
+        blank=True, 
+        help_text="HTML template for PDF generation (internship only)"
+    )
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.get_usage_type_display()} - {self.language})"
+
+    class Meta:
+        verbose_name = "Message Template"
+        verbose_name_plural = "Message Templates"
+        ordering = ['usage_type', 'stage', 'language', 'name']
+
+
+class Prospect(models.Model):
+    """Potential client for web development services"""
+    STATUS_CHOICES = [
+        ('new', 'New'),
+        ('contacted', 'Contacted'),
+        ('interested', 'Interested'),
+        ('proposal_sent', 'Proposal Sent'),
+        ('negotiation', 'Negotiation'),
+        ('won', 'Won'),
+        ('lost', 'Lost'),
+    ]
+    SOURCE_CHOICES = [
+        ('google_maps', 'Google Maps'),
+        ('referral', 'Referral'),
+        ('social', 'Social Media'),
+        ('direct', 'Direct Contact'),
+        ('other', 'Other'),
+    ]
+    
+    company_name = models.CharField(max_length=255)
+    contact_name = models.CharField(max_length=255, blank=True)
+    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    address = models.TextField(blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    google_maps_url = models.URLField(blank=True)
+    website_url = models.URLField(blank=True)
+    has_website = models.BooleanField(default=False)
+    has_facebook = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
+    estimated_value = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default='google_maps')
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.company_name
+
+    class Meta:
+        verbose_name = "Prospect"
+        verbose_name_plural = "Prospects"
+        ordering = ['-created_at']
+
+
+class ProspectNote(models.Model):
+    """Notes and conversation history for a prospect"""
+    prospect = models.ForeignKey(Prospect, on_delete=models.CASCADE, related_name='prospect_notes')
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Note for {self.prospect.company_name} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+
+    class Meta:
+        verbose_name = "Prospect Note"
+        verbose_name_plural = "Prospect Notes"
+        ordering = ['-created_at']
+
+
+class ProspectMessage(models.Model):
+    """Track messages sent to prospects"""
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('sent', 'Sent'),
+        ('opened', 'Opened'),
+        ('replied', 'Replied'),
+    ]
+    
+    prospect = models.ForeignKey(Prospect, on_delete=models.CASCADE, related_name='messages')
+    template = models.ForeignKey(MessageTemplate, on_delete=models.SET_NULL, null=True, blank=True)
+    subject = models.CharField(max_length=255)
+    body = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    sent_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Message to {self.prospect.company_name} - {self.status}"
+
+    class Meta:
+        verbose_name = "Prospect Message"
+        verbose_name_plural = "Prospect Messages"
+        ordering = ['-created_at']
