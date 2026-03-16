@@ -3,11 +3,15 @@
 ## 🎯 Overview
 
 The system now supports **3 contact channels** for prospects:
-- ✅ **Email** - Automatic sending via backend (free)
-- ✅ **WhatsApp** - Manual redirection (free app)
-- ✅ **Facebook Messenger** - Manual redirection (free)
+- ✅ **Email** - Automatic sending via backend (free) - **Uses subject + body**
+- ✅ **WhatsApp** - Manual redirection (free app) - **Uses body only (no subject)**
+- ✅ **Facebook Messenger** - Manual redirection (free) - **Uses body only (no subject)**
 
 ---
+
+**Key Difference:**
+- 📧 **Email**: Formal with subject line + message body
+- 📱 **WhatsApp/Facebook**: Direct message without subject (like chat)
 
 ## 📋 Frontend Workflow
 
@@ -95,8 +99,8 @@ function openWhatsApp(prospectId, formData) {
   // Get prospect data
   const prospect = getProspectData(prospectId);
   
-  // Build message
-  const message = encodeURIComponent(formData.body);
+  // Build message - JUST BODY, NO SUBJECT for WhatsApp
+  const message = encodeURIComponent(formData.body);  // Only body, no subject
   
   // Build WhatsApp URL
   const whatsappUrl = `https://wa.me/${prospect.whatsapp_phone}?text=${message}`;
@@ -104,7 +108,7 @@ function openWhatsApp(prospectId, formData) {
   // Log the action (optional)
   logMessage(prospectId, {
     channel: 'whatsapp',
-    subject: formData.subject,
+    subject: '',  // No subject for WhatsApp
     body: formData.body
   });
   
@@ -123,7 +127,7 @@ function openFacebookMessenger(prospectId, formData) {
   // Log the action (optional)
   logMessage(prospectId, {
     channel: 'facebook',
-    subject: formData.subject,
+    subject: '',  // No subject for Facebook
     body: formData.body
   });
   
@@ -294,13 +298,31 @@ document.getElementById('contact-form').addEventListener('submit', async (e) => 
 
 ## ✅ Summary
 
-| Channel | How It Works | Cost | Automation |
-|---------|--------------|------|------------|
-| **Email** | Backend sends via SMTP | Free | ✅ 100% Auto |
-| **WhatsApp** | Frontend opens `wa.me` link | Free | ❌ Manual |
-| **Facebook** | Frontend opens Messenger URL | Free | ❌ Manual |
+| Channel | How It Works | Cost | Automation | Message Format |
+|---------|--------------|------|------------|----------------|
+| **Email** | Backend sends via SMTP | Free | ✅ 100% Auto | 📧 Subject + Body |
+| **WhatsApp** | Frontend opens `wa.me` link | Free | ❌ Manual | 📱 Body only (no subject) |
+| **Facebook** | Frontend opens Messenger URL | Free | ❌ Manual | 💬 Body only (no subject) |
 
 ---
+
+**Example Messages:**
+
+📧 **Email:**
+```
+Subject: Création de site web pour RESTAURANT OS
+
+Bonjour Karim,
+Je suis développeur web...
+Cordialement,
+```
+
+📱 **WhatsApp/Facebook:**
+```
+Bonjour Karim,
+Je suis développeur web...
+Cordialement,
+```
 
 ## 🚀 Quick Start
 

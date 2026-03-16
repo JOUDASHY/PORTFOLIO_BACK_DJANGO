@@ -26,7 +26,7 @@ from .models import Notification
 from .models import Facebook
 from .models import MyLogin
 from .models import CV
-from .models import MessageTemplate, Prospect, ProspectNote, ProspectMessage
+from .models import MessageTemplate, Prospect, ProspectNote, ProspectMessage, ProspectRating
 from django.conf import settings
 
 
@@ -291,9 +291,18 @@ class ProspectMessageSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'sent_at', 'created_at']
 
 
+class ProspectRatingSerializer(serializers.ModelSerializer):
+    """Serializer for prospect 5-star ratings"""
+    class Meta:
+        model = ProspectRating
+        fields = ['id', 'prospect', 'rating', 'comment', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
 class ProspectSerializer(serializers.ModelSerializer):
     notes = ProspectNoteSerializer(many=True, read_only=True)
     messages = ProspectMessageSerializer(many=True, read_only=True)
+    ratings = ProspectRatingSerializer(many=True, read_only=True)  # ✨ Added ratings
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     source_display = serializers.CharField(source='get_source_display', read_only=True)
 
@@ -304,7 +313,7 @@ class ProspectSerializer(serializers.ModelSerializer):
             'whatsapp_phone', 'facebook_url',  # ✨ ADDED: Multi-channel fields
             'address', 'city', 'google_maps_url', 'website_url', 'has_website',
             'has_facebook', 'status', 'status_display', 'estimated_value',
-            'source', 'source_display', 'notes', 'messages', 'created_at', 'updated_at'
+            'source', 'source_display', 'notes', 'messages', 'ratings', 'created_at', 'updated_at'  # ✨ Added ratings
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 

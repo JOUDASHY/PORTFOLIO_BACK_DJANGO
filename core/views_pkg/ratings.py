@@ -13,11 +13,34 @@ class RatingView(APIView):
         score = request.data.get('score')
         ip_address = self.get_client_ip(request)
 
-        if Rating.objects.filter(project_id=project_id, ip_address=ip_address).exists():
-            return Response({"message": "Vous avez déjà noté ce projet.", "ip_address": ip_address}, status=status.HTTP_400_BAD_REQUEST)
+        # Validate score
+        if not score or score < 1 or score > 5:
+            return Response(
+                {"message": "Le score doit être entre 1 et 5."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        rating = Rating.objects.create(project_id=project_id, score=score, ip_address=ip_address)
-        return Response({"message": "Merci pour votre note !", "score": rating.score, "ip_address": ip_address}, status=status.HTTP_201_CREATED)
+        # Use update_or_create to handle unique constraint
+        rating, created = Rating.objects.update_or_create(
+            project_id=project_id,
+            ip_address=ip_address,
+            defaults={'score': score}
+        )
+        
+        if created:
+            return Response({
+                "message": "Merci pour votre note !", 
+                "score": rating.score, 
+                "ip_address": ip_address,
+                "updated": False
+            }, status=status.HTTP_201_CREATED)
+        else:
+            return Response({
+                "message": "Votre note a été mise à jour !", 
+                "score": rating.score, 
+                "ip_address": ip_address,
+                "updated": True
+            }, status=status.HTTP_200_OK)
 
     def get_permissions(self):
         if self.request.method == 'POST':

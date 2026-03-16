@@ -394,3 +394,27 @@ class ProspectMessage(models.Model):
         verbose_name = "Prospect Message"
         verbose_name_plural = "Prospect Messages"
         ordering = ['-created_at']
+
+
+class ProspectRating(models.Model):
+    """5-star rating system for prospects (quality, interest level, etc.)"""
+    prospect = models.ForeignKey(Prospect, on_delete=models.CASCADE, related_name='ratings')
+    rating = models.IntegerField(
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5)
+        ],
+        help_text="Rating from 1 to 5 stars"
+    )
+    comment = models.TextField(blank=True, help_text="Optional comment about this rating")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.prospect.company_name} - {'⭐' * self.rating} ({self.rating}/5)"
+
+    class Meta:
+        verbose_name = "Prospect Rating"
+        verbose_name_plural = "Prospect Ratings"
+        ordering = ['-created_at']
+        unique_together = ['prospect']  # One rating per prospect (can be updated)

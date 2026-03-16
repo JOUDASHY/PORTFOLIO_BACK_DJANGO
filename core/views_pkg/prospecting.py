@@ -5,10 +5,11 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils.timezone import now
 from django.db.models import Sum, Count, Avg
 
-from core.models import Prospect, ProspectNote, ProspectMessage, MessageTemplate
+from core.models import Prospect, ProspectNote, ProspectMessage, MessageTemplate, ProspectRating
 from core.serializers import (
     ProspectSerializer, ProspectListSerializer, ProspectNoteSerializer,
-    ProspectMessageSerializer, MessageTemplateSerializer, ProspectStatsSerializer
+    ProspectMessageSerializer, MessageTemplateSerializer, ProspectStatsSerializer,
+    ProspectRatingSerializer
 )
 
 
@@ -353,4 +354,101 @@ class MessageTemplateViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         return super().destroy(request, *args, **kwargs)
-        return queryset
+
+
+class ProspectRatingView(APIView):
+    """
+    Manage 5-star rating for a prospect
+    GET - Get current rating
+    POST - Create or update rating
+    DELETE - Remove rating
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, pk):
+        """Get rating for a specific prospect"""
+        try:
+            prospect = Prospect.objects.get(pk=pk)
+        except Prospect.DoesNotExist:
+            return Response(
+                {"detail": "Prospect not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        rating = ProspectRating.objects.filter(prospect=prospect).first()
+        
+        if not rating:
+            return Response(
+                {"detail": "No rating found for this prospect."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        serializer = ProspectRatingSerializer(rating)
+        return Response(serializer.data)
+    
+    def post(self, request, pk):
+        """Create or update rating for a prospect"""
+        try:
+            prospect = Prospect.objects.get(pk=pk)
+        except Prospect.DoesNotExist:
+            return Response(
+                {"detail": "Prospect not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        rating_value = request.data.get('rating')
+        comment = request.data.get('comment', '')
+        
+        # Validate rating
+        if not rating_value:
+            return Response(
+                {"detail": "Rating is required (1-5)."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            rating_value = int(rating_value)
+            if rating_value < 1 or rating_value > 5:
+                raise ValueError()
+        except ValueError:
+            return Response(
+                {"detail": "Rating must be between 1 and 5."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Get existing rating or create new one
+        rating, created = ProspectRating.objects.get_or_create(
+            prospect=prospect,
+            defaults={'rating': rating_value, 'comment': comment}
+        )
+        
+        if not created:
+            # Update existing rating
+            rating.rating = rating_value
+            rating.comment = comment
+            rating.save()
+        
+        serializer = ProspectRatingSerializer(rating)
+        status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        return Response(serializer.data, status=status_code)
+    
+    def delete(self, request, pk):
+        """Remove rating from a prospect"""
+        try:
+            prospect = Prospect.objects.get(pk=pk)
+        except Prospect.DoesNotExist:
+            return Response(
+                {"detail": "Prospect not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        rating = ProspectRating.objects.filter(prospect=prospect).first()
+        
+        if not rating:
+            return Response(
+                {"detail": "No rating found for this prospect."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        rating.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

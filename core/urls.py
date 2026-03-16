@@ -38,7 +38,7 @@ from .api import (
     CVListView,
     ProspectViewSet, ProspectStatusView, ProspectStatsView,
     ProspectNoteViewSet, ProspectMessageView, ProspectMessageSendView,
-    ProspectMessagePreviewView, MessageTemplateViewSet
+    ProspectMessagePreviewView, MessageTemplateViewSet, ProspectRatingView
 
     )
 
@@ -124,6 +124,7 @@ urlpatterns = [
     path('prospects/', ProspectViewSet.as_view({'get': 'list', 'post': 'create'}), name='prospect-list-create'),
     path('prospects/<int:pk>/', ProspectViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='prospect-detail'),
     path('prospects/<int:pk>/status/', ProspectStatusView.as_view(), name='prospect-status'),
+    path('prospects/<int:pk>/rating/', ProspectRatingView.as_view(), name='prospect-rating'),  # ✨ NEW: Rating endpoint
     path('prospects/stats/', ProspectStatsView.as_view(), name='prospect-stats'),
     path('prospects/<int:prospect_pk>/notes/', ProspectNoteViewSet.as_view({'get': 'list', 'post': 'create'}), name='prospect-notes'),
     path('prospects/<int:prospect_pk>/notes/<int:pk>/', ProspectNoteViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='prospect-note-detail'),
