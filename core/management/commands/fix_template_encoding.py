@@ -60,11 +60,30 @@ class Command(BaseCommand):
         self.stdout.write(f'{"="*60}\n')
 
     def fix_encoding(self, text):
-        """Convert latin1/ISO-8859-1 encoded text back to proper UTF-8"""
+        """Fix common UTF-8 corruption patterns"""
         if not text:
             return text
         
-        try:
-            return text.encode('latin1').decode('utf-8')
-        except (UnicodeEncodeError, UnicodeDecodeError):
-            return text
+        # Direct character replacements for known corruption patterns
+        replacements = {
+            'âœ…': '✅',
+            'â‚¬': '€',
+            'Ã©': 'é',
+            'Ã¨': 'è',
+            'Ã ': 'à',
+            'Ã¹': 'ù',
+            'Ã¢': 'â',
+            'Ãª': 'ê',
+            'Ã®': 'î',
+            'Ã´': 'ô',
+            'Ã»': 'û',
+            'Ã«': 'ë',
+            'Ã¯': 'ï',
+            'Ã¼': 'ü',
+            'Ã§': 'ç',
+        }
+        
+        for wrong, right in replacements.items():
+            text = text.replace(wrong, right)
+        
+        return text

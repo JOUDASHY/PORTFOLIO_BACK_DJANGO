@@ -9,18 +9,47 @@ Usage:
 
 from core.models import MessageTemplate
 
-def fix_latin1_to_utf8(text):
-    """Convert latin1/ISO-8859-1 encoded text back to proper UTF-8"""
+
+def fix_text(text):
+    """Fix common UTF-8 corruption patterns"""
     if not text:
         return text
     
-    try:
-        # Try to encode as latin1 and decode as utf-8
-        # This fixes double-encoded text like "Ã©" → "é"
-        return text.encode('latin1').decode('utf-8')
-    except (UnicodeEncodeError, UnicodeDecodeError):
-        # If that fails, return original
-        return text
+    # Direct character replacements for known corruption patterns
+    replacements = {
+        'âœ…': '✅',
+        'â‚¬': '€',
+        'Ã©': 'é',
+        'Ã¨': 'è',
+        'Ã ': 'à',
+        'Ã¹': 'ù',
+        'Ã¢': 'â',
+        'Ãª': 'ê',
+        'Ã®': 'î',
+        'Ã´': 'ô',
+        'Ã»': 'û',
+        'Ã«': 'ë',
+        'Ã¯': 'ï',
+        'Ã¼': 'ü',
+        'Ã§': 'ç',
+        'Ã': 'À',
+        'Ãˆ': 'È',
+        'Ã‰': 'É',
+        'Ã™': 'Ù',
+        'ÃŠ': 'Ê',
+        'ÃŽ': 'Î',
+        'Ã”': 'Ô',
+        'Ã›': 'Û',
+        'Ã‹': 'Ë',
+        'Ã': 'Ï',
+        'Ãœ': 'Ü',
+        'Ã‡': 'Ç',
+    }
+    
+    for wrong, right in replacements.items():
+        text = text.replace(wrong, right)
+    
+    return text
 
 
 def fix_message_templates():
@@ -35,11 +64,9 @@ def fix_message_templates():
         original_subject = template.subject
         original_body = template.body
         
-        # Fix subject
-        template.subject = fix_latin1_to_utf8(template.subject)
-        
-        # Fix body
-        template.body = fix_latin1_to_utf8(template.body)
+        # Fix subject and body
+        template.subject = fix_text(template.subject)
+        template.body = fix_text(template.body)
         
         # Check if anything changed
         if template.subject != original_subject or template.body != original_body:
@@ -66,6 +93,17 @@ def fix_message_templates():
         print(f"   Subject: {t.subject[:80]}")
         print(f"   Body preview: {t.body[:100]}...")
         print()
+    
+    # Verify template #6 specifically
+    try:
+        t6 = MessageTemplate.objects.get(id=6)
+        print("=== Template #6 Verification ===")
+        print(f"Contains ✅: {'✅' in t6.body}")
+        print(f"Contains âœ…: {'âœ…' in t6.body}")
+        print(f"Body preview: {t6.body[100:200]}")
+        print()
+    except MessageTemplate.DoesNotExist:
+        pass
 
 
 if __name__ == "__main__":
