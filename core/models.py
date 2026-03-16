@@ -325,6 +325,8 @@ class Prospect(models.Model):
     contact_name = models.CharField(max_length=255, blank=True)
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=20, blank=True)
+    whatsapp_phone = models.CharField(max_length=20, blank=True, help_text="Numéro WhatsApp (avec indicatif, ex: +261...)")
+    facebook_url = models.URLField(blank=True, help_text="URL Page Facebook ou profil")
     address = models.TextField(blank=True)
     city = models.CharField(max_length=100, blank=True)
     google_maps_url = models.URLField(blank=True)
@@ -370,9 +372,15 @@ class ProspectMessage(models.Model):
         ('opened', 'Opened'),
         ('replied', 'Replied'),
     ]
+    CHANNEL_CHOICES = [
+        ('email', 'Email'),
+        ('whatsapp', 'WhatsApp'),
+        ('facebook', 'Facebook Messenger'),
+    ]
     
     prospect = models.ForeignKey(Prospect, on_delete=models.CASCADE, related_name='messages')
     template = models.ForeignKey(MessageTemplate, on_delete=models.SET_NULL, null=True, blank=True)
+    channel = models.CharField(max_length=20, choices=CHANNEL_CHOICES, default='email')
     subject = models.CharField(max_length=255)
     body = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')

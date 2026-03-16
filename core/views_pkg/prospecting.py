@@ -160,7 +160,7 @@ class ProspectMessageView(APIView):
 
 
 class ProspectMessageSendView(APIView):
-    """Send/Log a message to a prospect"""
+    """Send/Log a message to a prospect via Email, WhatsApp, or Facebook"""
     permission_classes = [IsAuthenticated]
     
     def post(self, request, prospect_id):
@@ -175,6 +175,7 @@ class ProspectMessageSendView(APIView):
         template_id = request.data.get('template_id')
         subject = request.data.get('subject', '')
         body = request.data.get('body', '')
+        channel = request.data.get('channel', 'email')  # email, whatsapp, facebook
         
         # If template provided, use it
         template = None
@@ -194,6 +195,7 @@ class ProspectMessageSendView(APIView):
         message = ProspectMessage.objects.create(
             prospect=prospect,
             template=template,
+            channel=channel,
             subject=subject,
             body=body,
             status='sent',
@@ -204,6 +206,26 @@ class ProspectMessageSendView(APIView):
         if prospect.status == 'new':
             prospect.status = 'contacted'
             prospect.save()
+        
+        # ✨ ENVOI EMAIL SI CHANNEL = EMAIL ✨
+        if channel == 'email' and prospect.email:
+            try:
+                from django.core.mail import EmailMessage
+                from django.conf import settings
+                
+                # Créer l'email (SANS CV pour la prospection)
+                email = EmailMessage(subject, body, settings.EMAIL_HOST_USER, [prospect.email])
+                
+                # ⚠️ IMPORTANT: Prospection = pas de CV
+                # Le CV est uniquement pour les demandes de stage (internship)
+                # Pour la prospection, on envoie juste le message commercial
+                
+                # Envoyer
+                email.send(fail_silently=False)
+                print(f"✅ Prospecting email sent to {prospect.email}")
+            except Exception as e:
+                print(f"⚠️ Email logged but not sent: {str(e)}")
+                # On continue quand même - le message est logué
         
         serializer = ProspectMessageSerializer(message)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -289,7 +311,7 @@ class ProspectMessagePreviewView(APIView):
 
 
 class MessageTemplateViewSet(viewsets.ModelViewSet):
-    """ViewSet for managing message templates (prospecting AND internship)"""
+    """CRUD for managing message templates (prospecting AND internship)"""
     permission_classes = [IsAuthenticated]
     serializer_class = MessageTemplateSerializer
     
@@ -306,9 +328,29 @@ class MessageTemplateViewSet(viewsets.ModelViewSet):
         if stage:
             queryset = queryset.filter(stage=stage)
         
-        # Filter by usage_type (NEW)
+        # Filter by usage_type
         usage_type = self.request.query_params.get('usage_type')
         if usage_type:
             queryset = queryset.filter(usage_type=usage_type)
         
+        # Filter by is_default (only show user-created templates by default)
+        is_default = self.request.query_params.get('is_default')
+        if is_default is not None:
+            queryset = queryset.filter(is_default=is_default.lower() == 'true')
+        
+        return queryset
+    
+    def perform_create(self, serializer):
+        """Set the user who created the template (optional)"""
+        serializer.save()
+    
+    def destroy(self, request, *args, **kwargs):
+        """Prevent deletion of default templates"""
+        instance = self.get_object()
+        if instance.is_default:
+            return Response(
+                {"detail": "Cannot delete default system templates."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().destroy(request, *args, **kwargs)
         return queryset

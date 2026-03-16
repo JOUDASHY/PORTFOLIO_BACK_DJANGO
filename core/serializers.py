@@ -283,9 +283,11 @@ class ProspectNoteSerializer(serializers.ModelSerializer):
 
 
 class ProspectMessageSerializer(serializers.ModelSerializer):
+    channel_display = serializers.CharField(source='get_channel_display', read_only=True)
+    
     class Meta:
         model = ProspectMessage
-        fields = ['id', 'prospect', 'template', 'subject', 'body', 'status', 'sent_at', 'created_at']
+        fields = ['id', 'prospect', 'template', 'channel', 'channel_display', 'subject', 'body', 'status', 'sent_at', 'created_at']
         read_only_fields = ['id', 'sent_at', 'created_at']
 
 
@@ -299,6 +301,7 @@ class ProspectSerializer(serializers.ModelSerializer):
         model = Prospect
         fields = [
             'id', 'company_name', 'contact_name', 'email', 'phone',
+            'whatsapp_phone', 'facebook_url',  # ✨ ADDED: Multi-channel fields
             'address', 'city', 'google_maps_url', 'website_url', 'has_website',
             'has_facebook', 'status', 'status_display', 'estimated_value',
             'source', 'source_display', 'notes', 'messages', 'created_at', 'updated_at'
@@ -316,6 +319,7 @@ class ProspectListSerializer(serializers.ModelSerializer):
         model = Prospect
         fields = [
             'id', 'company_name', 'contact_name', 'email', 'phone',
+            'whatsapp_phone', 'facebook_url',  # ✨ ADDED: Multi-channel fields
             'status', 'status_display', 'estimated_value', 'city',
             'notes_count', 'messages_count', 'created_at', 'updated_at'
         ]
