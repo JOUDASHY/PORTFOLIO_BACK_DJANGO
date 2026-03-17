@@ -26,7 +26,7 @@ from .models import Notification
 from .models import Facebook
 from .models import MyLogin
 from .models import CV
-from .models import MessageTemplate, Prospect, ProspectNote, ProspectMessage, ProspectRating
+from .models import MessageTemplate, Prospect, ProspectNote, ProspectMessage, ProspectRating, ProspectAttachment
 from django.conf import settings
 
 
@@ -287,8 +287,25 @@ class ProspectMessageSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ProspectMessage
-        fields = ['id', 'prospect', 'template', 'channel', 'channel_display', 'subject', 'body', 'status', 'sent_at', 'created_at']
+        fields = ['id', 'prospect', 'template', 'channel', 'channel_display', 'subject', 'body', 'include_cv', 'attachment_files', 'status', 'sent_at', 'created_at']
         read_only_fields = ['id', 'sent_at', 'created_at']
+
+
+class ProspectAttachmentSerializer(serializers.ModelSerializer):
+    """Serializer for prospect attachments"""
+    file_url = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = ProspectAttachment
+        fields = ['id', 'name', 'file', 'file_url', 'content_type', 'uploaded_at']
+        read_only_fields = ['id', 'uploaded_at']
+    
+    def get_file_url(self, obj):
+        """Get absolute URL for the file"""
+        request = self.context.get('request')
+        if obj.file and request:
+            return request.build_absolute_uri(obj.file.url)
+        return None
 
 
 class ProspectRatingSerializer(serializers.ModelSerializer):

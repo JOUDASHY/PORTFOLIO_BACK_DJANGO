@@ -38,7 +38,8 @@ from .api import (
     CVListView,
     ProspectViewSet, ProspectStatusView, ProspectStatsView,
     ProspectNoteViewSet, ProspectMessageView, ProspectMessageSendView,
-    ProspectMessagePreviewView, MessageTemplateViewSet, ProspectRatingView
+    ProspectMessagePreviewView, MessageTemplateViewSet, ProspectRatingView,
+    ProspectAttachmentUploadView, ProspectAttachmentViewSet
 
     )
 
@@ -131,6 +132,12 @@ urlpatterns = [
     path('prospects/<int:prospect_id>/messages/', ProspectMessageView.as_view(), name='prospect-messages'),
     path('prospects/<int:prospect_id>/messages/send/', ProspectMessageSendView.as_view(), name='prospect-message-send'),
     path('prospects/<int:prospect_id>/messages/preview/', ProspectMessagePreviewView.as_view(), name='prospect-message-preview'),
+    
+    # Attachment upload and management
+    path('prospect-attachments/', ProspectAttachmentViewSet.as_view({'get': 'list', 'post': 'create'}), name='prospect-attachment-list'),
+    path('prospect-attachments/upload/', ProspectAttachmentUploadView.as_view(), name='prospect-attachment-upload'),
+    path('prospect-attachments/<int:pk>/', ProspectAttachmentViewSet.as_view({'get': 'retrieve', 'delete': 'destroy'}), name='prospect-attachment-detail'),
+    
     path('message-templates/', MessageTemplateViewSet.as_view({'get': 'list', 'post': 'create'}), name='template-list-create'),
     path('message-templates/<int:pk>/', MessageTemplateViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='template-detail'),
 ]    

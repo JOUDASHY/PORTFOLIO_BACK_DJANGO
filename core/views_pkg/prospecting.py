@@ -2,14 +2,16 @@ from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.utils.timezone import now
 from django.db.models import Sum, Count, Avg
+import os
 
-from core.models import Prospect, ProspectNote, ProspectMessage, MessageTemplate, ProspectRating
+from core.models import Prospect, ProspectNote, ProspectMessage, MessageTemplate, ProspectRating, ProspectAttachment
 from core.serializers import (
     ProspectSerializer, ProspectListSerializer, ProspectNoteSerializer,
     ProspectMessageSerializer, MessageTemplateSerializer, ProspectStatsSerializer,
-    ProspectRatingSerializer
+    ProspectRatingSerializer, ProspectAttachmentSerializer
 )
 
 
@@ -177,6 +179,8 @@ class ProspectMessageSendView(APIView):
         subject = request.data.get('subject', '')
         body = request.data.get('body', '')
         channel = request.data.get('channel', 'email')  # email, whatsapp, facebook
+        attachment_ids = request.data.get('attachments', [])  # List of ProspectAttachment IDs
+        include_cv = request.data.get('include_cv', False)  # Boolean to include CV
         
         # If template provided, use it
         template = None
@@ -192,6 +196,16 @@ class ProspectMessageSendView(APIView):
         subject = self._replace_variables(subject, prospect)
         body = self._replace_variables(body, prospect)
         
+        # Get attachment file paths
+        attachment_file_paths = []
+        if attachment_ids and isinstance(attachment_ids, list):
+            for att_id in attachment_ids:
+                try:
+                    attachment = ProspectAttachment.objects.get(pk=att_id)
+                    attachment_file_paths.append(attachment.file.path)
+                except ProspectAttachment.DoesNotExist:
+                    pass
+        
         # Create message record
         message = ProspectMessage.objects.create(
             prospect=prospect,
@@ -199,6 +213,8 @@ class ProspectMessageSendView(APIView):
             channel=channel,
             subject=subject,
             body=body,
+            include_cv=include_cv,
+            attachment_files=attachment_file_paths if attachment_file_paths else [],
             status='sent',
             sent_at=now()
         )
@@ -213,17 +229,39 @@ class ProspectMessageSendView(APIView):
             try:
                 from django.core.mail import EmailMessage
                 from django.conf import settings
+                import os
+                from core.models import CV
                 
-                # Créer l'email (SANS CV pour la prospection)
+                # Créer l'email
                 email = EmailMessage(subject, body, settings.EMAIL_HOST_USER, [prospect.email])
                 
-                # ⚠️ IMPORTANT: Prospection = pas de CV
-                # Le CV est uniquement pour les demandes de stage (internship)
-                # Pour la prospection, on envoie juste le message commercial
+                # ✨ ATTACHER LE CV SI DEMANDÉ ✨
+                if include_cv:
+                    cv = CV.objects.filter(is_active=True).first()
+                    if not cv:
+                        cv = CV.objects.order_by('-uploaded_at').first()
+                    
+                    if cv and os.path.exists(cv.file.path):
+                        email.attach_file(cv.file.path)
+                        print(f"📎 Attached CV: {cv.file.name}")
+                    else:
+                        print(f"⚠️ CV not found or not available")
+                
+                # ✨ ATTACHER LES AUTRES FICHIERS SI FOURNIS ✨
+                if attachment_file_paths and isinstance(attachment_file_paths, list):
+                    for file_path in attachment_file_paths:
+                        if file_path and os.path.exists(file_path):
+                            email.attach_file(file_path)
+                            print(f"📎 Attached file: {file_path}")
+                        else:
+                            print(f"⚠️ File not found: {file_path}")
                 
                 # Envoyer
                 email.send(fail_silently=False)
                 print(f"✅ Prospecting email sent to {prospect.email}")
+                attachments_count = (1 if include_cv else 0) + len(attachment_file_paths)
+                if attachments_count > 0:
+                    print(f"   Total attachments: {attachments_count} file(s)")
             except Exception as e:
                 print(f"⚠️ Email logged but not sent: {str(e)}")
                 # On continue quand même - le message est logué
@@ -452,3 +490,45 @@ class ProspectRatingView(APIView):
         
         rating.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ProspectAttachmentUploadView(APIView):
+    """
+    Upload file attachments for prospecting emails
+    POST with multipart/form-data containing 'file' field
+    Returns the attachment ID and URL to use in message sending
+    """
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+    
+    def post(self, request):
+        file_obj = request.FILES.get('file')
+        
+        if not file_obj:
+            return Response(
+                {"detail": "No file provided. Use 'file' field in multipart form."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Create attachment record
+        attachment = ProspectAttachment.objects.create(
+            name=file_obj.name,
+            file=file_obj,
+            content_type=file_obj.content_type
+        )
+        
+        serializer = ProspectAttachmentSerializer(attachment, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ProspectAttachmentViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing prospect attachments
+    - GET: List all attachments
+    - DELETE: Remove an attachment
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = ProspectAttachmentSerializer
+    
+    def get_queryset(self):
+        return ProspectAttachment.objects.all()

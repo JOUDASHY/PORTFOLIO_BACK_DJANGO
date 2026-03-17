@@ -383,6 +383,16 @@ class ProspectMessage(models.Model):
     channel = models.CharField(max_length=20, choices=CHANNEL_CHOICES, default='email')
     subject = models.CharField(max_length=255)
     body = models.TextField()
+    include_cv = models.BooleanField(
+        default=False,
+        help_text="Automatically attach CV from database (for email channel only)"
+    )
+    attachment_files = models.JSONField(
+        null=True, 
+        blank=True, 
+        default=list,
+        help_text="List of attached file URLs stored in media/ (for email channel only)"
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     sent_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -394,6 +404,22 @@ class ProspectMessage(models.Model):
         verbose_name = "Prospect Message"
         verbose_name_plural = "Prospect Messages"
         ordering = ['-created_at']
+
+
+class ProspectAttachment(models.Model):
+    """File attachments for prospecting emails"""
+    name = models.CharField(max_length=255)  # Original filename
+    file = models.FileField(upload_to='prospect_attachments/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    content_type = models.CharField(max_length=100, blank=True)  # MIME type
+    
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name = "Prospect Attachment"
+        verbose_name_plural = "Prospect Attachments"
+        ordering = ['-uploaded_at']
 
 
 class ProspectRating(models.Model):
@@ -414,6 +440,14 @@ class ProspectRating(models.Model):
         return f"{self.prospect.company_name} - {'⭐' * self.rating} ({self.rating}/5)"
 
     class Meta:
+        verbose_name = "Prospect Rating"
+        verbose_name_plural = "Prospect Ratings"
+        ordering = ['-created_at']
+        unique_together = ['prospect']  # One rating per prospect (can be updated)
+        verbose_name = "Prospect Rating"
+        verbose_name_plural = "Prospect Ratings"
+        ordering = ['-created_at']
+        unique_together = ['prospect']  # One rating per prospect (can be updated)
         verbose_name = "Prospect Rating"
         verbose_name_plural = "Prospect Ratings"
         ordering = ['-created_at']

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    MessageTemplate, Prospect, ProspectNote, ProspectMessage
+    MessageTemplate, Prospect, ProspectNote, ProspectMessage, ProspectAttachment
 )
 
 
@@ -40,6 +40,13 @@ class ProspectNoteAdmin(admin.ModelAdmin):
 
 @admin.register(ProspectMessage)
 class ProspectMessageAdmin(admin.ModelAdmin):
-    list_display = ['prospect', 'subject', 'status', 'sent_at', 'created_at']
-    list_filter = ['status']
+    list_display = ['prospect', 'subject', 'channel', 'include_cv', 'status', 'sent_at', 'created_at']
+    list_filter = ['status', 'channel', 'include_cv']
     search_fields = ['prospect__company_name', 'subject']
+
+
+@admin.register(ProspectAttachment)
+class ProspectAttachmentAdmin(admin.ModelAdmin):
+    list_display = ['name', 'uploaded_at', 'content_type']
+    list_filter = ['uploaded_at']
+    search_fields = ['name']

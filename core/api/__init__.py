@@ -24,7 +24,8 @@ from core.views_pkg.cv import CVView, CVListView
 from core.views_pkg.prospecting import (
     ProspectViewSet, ProspectStatusView, ProspectStatsView,
     ProspectNoteViewSet, ProspectMessageView, ProspectMessageSendView,
-    ProspectMessagePreviewView, MessageTemplateViewSet, ProspectRatingView
+    ProspectMessagePreviewView, MessageTemplateViewSet, ProspectRatingView,
+    ProspectAttachmentUploadView, ProspectAttachmentViewSet
 )
 
 __all__ = [
@@ -41,6 +42,7 @@ __all__ = [
     'CVView','CVListView',
     'ProspectViewSet','ProspectStatusView','ProspectStatsView',
     'ProspectNoteViewSet','ProspectMessageView','ProspectMessageSendView',
-    'ProspectMessagePreviewView','MessageTemplateViewSet','ProspectRatingView'
+    'ProspectMessagePreviewView','MessageTemplateViewSet','ProspectRatingView',
+    'ProspectAttachmentUploadView','ProspectAttachmentViewSet'
 ]
 
