@@ -1,143 +1,367 @@
 from django.urls import path
 from rest_framework_simplejwt import views as jwt_views
+
 from .api import (
-    RegisterView, 
-    LoginView, 
-    LogoutView, 
-    EducationViewSet, 
-    UserProfileView, 
-    ExperienceViewSet, 
-    ProjetViewSet, 
-    EmailViewSet,
-    SendEmailView,
-    HistoricMailListView,
-    EmailResponseViewSet, 
-    LangueViewSet,
-    get_all_users,
-    UpdateProfileView,
-    PasswordResetRequestView, 
-    PasswordResetConfirmView,
-    ProjetViewSet, ImageProjetViewSet,
-    CompetenceViewSet,
-    FormationViewSet,   
     AwardViewSet,
-    RatingView,
     ChangePasswordView,
+    CompetenceViewSet,
+    CVListView,
+    CVView,
+    EducationViewSet,
+    EmailResponseViewSet,
+    EmailViewSet,
+    ExperienceViewSet,
+    FacebookList,
+    FormationViewSet,
+    HistoricMailListView,
+    ImageProjetViewSet,
+    KeepAliveView,
+    LangueViewSet,
+    LoginView,
+    LogoutView,
+    MessageTemplateViewSet,
+    MonthlyVisitStats,
+    MyLoginViewSet,
+    NilsenProfileView,
+    NotificationTriggerView,
     NotificationView,
+    PasswordResetConfirmView,
+    PasswordResetRequestView,
+    ProjetViewSet,
+    ProspectAttachmentUploadView,
+    ProspectAttachmentViewSet,
+    ProspectMessagePreviewView,
+    ProspectMessageSendView,
+    ProspectMessageView,
+    ProspectNoteViewSet,
+    ProspectRatingView,
+    ProspectStatsView,
+    ProspectStatusView,
+    ProspectViewSet,
+    RatingView,
     # ChatbotView,
     RecordVisit,
+    RegisterView,
+    SendEmailView,
     TotalVisits,
-    MonthlyVisitStats,
-    NotificationTriggerView,
-    mark_all_notifications_as_read,
+    UpdateProfileView,
+    UserProfileView,
+    WebAuthnCredentialListView,
+    WebAuthnLoginBeginView,
+    WebAuthnLoginCompleteView,
+    WebAuthnRegisterBeginView,
+    WebAuthnRegisterCompleteView,
     clear_all_notifications,
-    FacebookList,
-    KeepAliveView,
-    MyLoginViewSet,
-    CVView,
-    CVListView,
-    ProspectViewSet, ProspectStatusView, ProspectStatsView,
-    ProspectNoteViewSet, ProspectMessageView, ProspectMessageSendView,
-    ProspectMessagePreviewView, MessageTemplateViewSet, ProspectRatingView,
-    ProspectAttachmentUploadView, ProspectAttachmentViewSet
-
-    )
-
-from django.conf import settings
-from django.conf.urls.static import static
-from .api import NilsenProfileView
-
+    get_all_users,
+    mark_all_notifications_as_read,
+)
 
 urlpatterns = [
-    path('api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
-    path('register/', RegisterView.as_view(), name='register'),
-    path('login/', LoginView.as_view(), name='login'),
-    path('change-password/', ChangePasswordView.as_view(), name='change_password'),
-    path('profile/', UserProfileView.as_view(), name='user-profile'),
-    path('logout/', LogoutView.as_view(), name='logout'),
-    path('education/', EducationViewSet.as_view({'get': 'list', 'post': 'create'}), name='education-list-create'),
-    path('education/<int:pk>/', EducationViewSet.as_view({'get': 'list','put': 'update', 'post': 'create','delete': 'destroy'}), name='education-detail-update-delete'),
-    path('experience/', ExperienceViewSet.as_view({'get': 'list', 'post': 'create'}), name='experience-list-create'),
-    path('experience/<int:pk>/', ExperienceViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='experience-detail-update-delete'),
-    path('NilsenProfile/', NilsenProfileView.as_view(), name='user-profile'),
-    path('competences/', CompetenceViewSet.as_view({'get': 'list', 'post': 'create'}), name='competence-list-create'),
-    path('competences/<int:pk>/', CompetenceViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='competence-detail-update-delete'),
-    path('projets/', ProjetViewSet.as_view({'get': 'list', 'post': 'create'}), name='projet-list-create'),
-    path('projets/<int:pk>/', ProjetViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='projet-detail-update-delete'),
-
-    path('formations/', FormationViewSet.as_view({'get': 'list', 'post': 'create'}), name='formation-list-create'),
-    path('formations/<int:pk>/', FormationViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='formation-detail-update-delete'),
-
-    path('awards/', AwardViewSet.as_view({'get': 'list', 'post': 'create'}), name='award-list-create'),
-    path('awards/<int:pk>/', AwardViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='award-detail-update-delete'),
-    path('rating/', RatingView.as_view(), name='rating-create'),
-    path('rating/<int:project_id>/', RatingView.as_view(), name='rating-detail'),
-
-    path('notifications/', NotificationView.as_view(), name='notification-list'),
-    path('notifications/<int:notification_id>/mark-as-read/', NotificationView.as_view(), name='notification-mark-as-read'),
-    path('notifications/trigger/', NotificationTriggerView.as_view(), name='notification-trigger'),
-    path("notifications/mark-all-read/", mark_all_notifications_as_read, name="mark-all-read"),
-    path("notifications/clear-all/", clear_all_notifications, name="clear-all-notifications"),
-
-    path('images/', ImageProjetViewSet.as_view({'get': 'list', 'post': 'create'}), name='image-list-create'),
-    path('images/<int:pk>/', ImageProjetViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='image-detail-update-delete'),
-
-
-    path('users/', get_all_users, name='get-all-users'),
-   
-    path('emails/', EmailViewSet.as_view({'get': 'list', 'post': 'create'}), name='email-list-create'),
-    path('emails/<int:pk>/', EmailViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='email-detail-update-delete'),
-    
-    path('emails/<int:email_id>/responses/', EmailResponseViewSet.as_view({'post': 'create', 'get': 'list'})),
-    path('email-responses/<int:pk>/', EmailResponseViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='emailresponse-detail-update-delete'),
-    path('emails/<int:email_id>/responses/', EmailResponseViewSet.as_view({'get': 'list'}), name='email-responses-list'),
-    path('mail_entreprise/', SendEmailView.as_view(), name='send-email'),
-    path('historic-mails/', HistoricMailListView.as_view(), name='historic_mails'),
-    path('langues/', LangueViewSet.as_view({'get': 'list', 'post': 'create'}), name='langue-list-create'),
-    path('langues/<int:pk>/', LangueViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='langue-detail-update-delete'),
-    path('profile/update/', UpdateProfileView.as_view(), name='update-profile'),
-    path('password-reset/', PasswordResetRequestView.as_view(), name='password-reset'),
-    path('password-reset-confirm/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
+    path(
+        "api/token/", jwt_views.TokenObtainPairView.as_view(), name="token_obtain_pair"
+    ),
+    path(
+        "api/token/refresh/", jwt_views.TokenRefreshView.as_view(), name="token_refresh"
+    ),
+    path("register/", RegisterView.as_view(), name="register"),
+    path("login/", LoginView.as_view(), name="login"),
+    path("change-password/", ChangePasswordView.as_view(), name="change_password"),
+    path("profile/", UserProfileView.as_view(), name="user-profile"),
+    path("logout/", LogoutView.as_view(), name="logout"),
+    path(
+        "education/",
+        EducationViewSet.as_view({"get": "list", "post": "create"}),
+        name="education-list-create",
+    ),
+    path(
+        "education/<int:pk>/",
+        EducationViewSet.as_view(
+            {"get": "list", "put": "update", "post": "create", "delete": "destroy"}
+        ),
+        name="education-detail-update-delete",
+    ),
+    path(
+        "experience/",
+        ExperienceViewSet.as_view({"get": "list", "post": "create"}),
+        name="experience-list-create",
+    ),
+    path(
+        "experience/<int:pk>/",
+        ExperienceViewSet.as_view(
+            {"get": "retrieve", "put": "update", "delete": "destroy"}
+        ),
+        name="experience-detail-update-delete",
+    ),
+    path("NilsenProfile/", NilsenProfileView.as_view(), name="user-profile"),
+    path(
+        "competences/",
+        CompetenceViewSet.as_view({"get": "list", "post": "create"}),
+        name="competence-list-create",
+    ),
+    path(
+        "competences/<int:pk>/",
+        CompetenceViewSet.as_view(
+            {"get": "retrieve", "put": "update", "delete": "destroy"}
+        ),
+        name="competence-detail-update-delete",
+    ),
+    path(
+        "projets/",
+        ProjetViewSet.as_view({"get": "list", "post": "create"}),
+        name="projet-list-create",
+    ),
+    path(
+        "projets/<int:pk>/",
+        ProjetViewSet.as_view(
+            {"get": "retrieve", "put": "update", "delete": "destroy"}
+        ),
+        name="projet-detail-update-delete",
+    ),
+    path(
+        "formations/",
+        FormationViewSet.as_view({"get": "list", "post": "create"}),
+        name="formation-list-create",
+    ),
+    path(
+        "formations/<int:pk>/",
+        FormationViewSet.as_view(
+            {"get": "retrieve", "put": "update", "delete": "destroy"}
+        ),
+        name="formation-detail-update-delete",
+    ),
+    path(
+        "awards/",
+        AwardViewSet.as_view({"get": "list", "post": "create"}),
+        name="award-list-create",
+    ),
+    path(
+        "awards/<int:pk>/",
+        AwardViewSet.as_view({"get": "retrieve", "put": "update", "delete": "destroy"}),
+        name="award-detail-update-delete",
+    ),
+    path("rating/", RatingView.as_view(), name="rating-create"),
+    path("rating/<int:project_id>/", RatingView.as_view(), name="rating-detail"),
+    path("notifications/", NotificationView.as_view(), name="notification-list"),
+    path(
+        "notifications/<int:notification_id>/mark-as-read/",
+        NotificationView.as_view(),
+        name="notification-mark-as-read",
+    ),
+    path(
+        "notifications/trigger/",
+        NotificationTriggerView.as_view(),
+        name="notification-trigger",
+    ),
+    path(
+        "notifications/mark-all-read/",
+        mark_all_notifications_as_read,
+        name="mark-all-read",
+    ),
+    path(
+        "notifications/clear-all/",
+        clear_all_notifications,
+        name="clear-all-notifications",
+    ),
+    path(
+        "images/",
+        ImageProjetViewSet.as_view({"get": "list", "post": "create"}),
+        name="image-list-create",
+    ),
+    path(
+        "images/<int:pk>/",
+        ImageProjetViewSet.as_view(
+            {"get": "retrieve", "put": "update", "delete": "destroy"}
+        ),
+        name="image-detail-update-delete",
+    ),
+    path("users/", get_all_users, name="get-all-users"),
+    path(
+        "emails/",
+        EmailViewSet.as_view({"get": "list", "post": "create"}),
+        name="email-list-create",
+    ),
+    path(
+        "emails/<int:pk>/",
+        EmailViewSet.as_view({"get": "retrieve", "put": "update", "delete": "destroy"}),
+        name="email-detail-update-delete",
+    ),
+    path(
+        "emails/<int:email_id>/responses/",
+        EmailResponseViewSet.as_view({"post": "create", "get": "list"}),
+    ),
+    path(
+        "email-responses/<int:pk>/",
+        EmailResponseViewSet.as_view(
+            {"get": "retrieve", "put": "update", "delete": "destroy"}
+        ),
+        name="emailresponse-detail-update-delete",
+    ),
+    path(
+        "emails/<int:email_id>/responses/",
+        EmailResponseViewSet.as_view({"get": "list"}),
+        name="email-responses-list",
+    ),
+    path("mail_entreprise/", SendEmailView.as_view(), name="send-email"),
+    path("historic-mails/", HistoricMailListView.as_view(), name="historic_mails"),
+    path(
+        "langues/",
+        LangueViewSet.as_view({"get": "list", "post": "create"}),
+        name="langue-list-create",
+    ),
+    path(
+        "langues/<int:pk>/",
+        LangueViewSet.as_view(
+            {"get": "retrieve", "put": "update", "delete": "destroy"}
+        ),
+        name="langue-detail-update-delete",
+    ),
+    path("profile/update/", UpdateProfileView.as_view(), name="update-profile"),
+    path("password-reset/", PasswordResetRequestView.as_view(), name="password-reset"),
+    path(
+        "password-reset-confirm/",
+        PasswordResetConfirmView.as_view(),
+        name="password-reset-confirm",
+    ),
     # path('chatbot/', ChatbotView.as_view(), name='chatbot'),
-    path('record-visit/', RecordVisit.as_view(), name='record-visit'),
-    path('total-visits/', TotalVisits.as_view(), name='total-visits'),
-    path('monthly-visit-stats/', MonthlyVisitStats.as_view(), name='monthly-visit-stats'),
-    path('facebook/', FacebookList.as_view(), name='facebook-list-create'),
-    path('facebook/<int:pk>/', FacebookList.as_view(), name='facebook-delete'),  # Route pour la suppression
-    path('keep-alive/', KeepAliveView.as_view(), name="keep_alive"),
+    path("record-visit/", RecordVisit.as_view(), name="record-visit"),
+    path("total-visits/", TotalVisits.as_view(), name="total-visits"),
     path(
-        'all_my_logins/',
-        MyLoginViewSet.as_view({'get': 'list', 'post': 'create'}),
-        name='all-my-logins'
+        "monthly-visit-stats/", MonthlyVisitStats.as_view(), name="monthly-visit-stats"
+    ),
+    path("facebook/", FacebookList.as_view(), name="facebook-list-create"),
+    path(
+        "facebook/<int:pk>/", FacebookList.as_view(), name="facebook-delete"
+    ),  # Route pour la suppression
+    path("keep-alive/", KeepAliveView.as_view(), name="keep_alive"),
+    path(
+        "all_my_logins/",
+        MyLoginViewSet.as_view({"get": "list", "post": "create"}),
+        name="all-my-logins",
     ),
     path(
-        'all_my_logins/<int:pk>/',
-        MyLoginViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}),
-        name='all-my-logins-detail'
+        "all_my_logins/<int:pk>/",
+        MyLoginViewSet.as_view(
+            {"get": "retrieve", "put": "update", "delete": "destroy"}
+        ),
+        name="all-my-logins-detail",
     ),
-    path('cv/', CVView.as_view(), name='cv-detail'),
-    path('cv/list/', CVListView.as_view(), name='cv-list'),
-    
+    path("cv/", CVView.as_view(), name="cv-detail"),
+    path("cv/list/", CVListView.as_view(), name="cv-list"),
     # =====================================================
     # PROSPECTING ROUTES
     # =====================================================
-    path('prospects/', ProspectViewSet.as_view({'get': 'list', 'post': 'create'}), name='prospect-list-create'),
-    path('prospects/<int:pk>/', ProspectViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='prospect-detail'),
-    path('prospects/<int:pk>/status/', ProspectStatusView.as_view(), name='prospect-status'),
-    path('prospects/<int:pk>/rating/', ProspectRatingView.as_view(), name='prospect-rating'),  # ✨ NEW: Rating endpoint
-    path('prospects/stats/', ProspectStatsView.as_view(), name='prospect-stats'),
-    path('prospects/<int:prospect_pk>/notes/', ProspectNoteViewSet.as_view({'get': 'list', 'post': 'create'}), name='prospect-notes'),
-    path('prospects/<int:prospect_pk>/notes/<int:pk>/', ProspectNoteViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='prospect-note-detail'),
-    path('prospects/<int:prospect_id>/messages/', ProspectMessageView.as_view(), name='prospect-messages'),
-    path('prospects/<int:prospect_id>/messages/send/', ProspectMessageSendView.as_view(), name='prospect-message-send'),
-    path('prospects/<int:prospect_id>/messages/preview/', ProspectMessagePreviewView.as_view(), name='prospect-message-preview'),
-    
+    path(
+        "prospects/",
+        ProspectViewSet.as_view({"get": "list", "post": "create"}),
+        name="prospect-list-create",
+    ),
+    path(
+        "prospects/<int:pk>/",
+        ProspectViewSet.as_view(
+            {"get": "retrieve", "put": "update", "delete": "destroy"}
+        ),
+        name="prospect-detail",
+    ),
+    path(
+        "prospects/<int:pk>/status/",
+        ProspectStatusView.as_view(),
+        name="prospect-status",
+    ),
+    path(
+        "prospects/<int:pk>/rating/",
+        ProspectRatingView.as_view(),
+        name="prospect-rating",
+    ),  # ✨ NEW: Rating endpoint
+    path("prospects/stats/", ProspectStatsView.as_view(), name="prospect-stats"),
+    path(
+        "prospects/<int:prospect_pk>/notes/",
+        ProspectNoteViewSet.as_view({"get": "list", "post": "create"}),
+        name="prospect-notes",
+    ),
+    path(
+        "prospects/<int:prospect_pk>/notes/<int:pk>/",
+        ProspectNoteViewSet.as_view(
+            {"get": "retrieve", "put": "update", "delete": "destroy"}
+        ),
+        name="prospect-note-detail",
+    ),
+    path(
+        "prospects/<int:prospect_id>/messages/",
+        ProspectMessageView.as_view(),
+        name="prospect-messages",
+    ),
+    path(
+        "prospects/<int:prospect_id>/messages/send/",
+        ProspectMessageSendView.as_view(),
+        name="prospect-message-send",
+    ),
+    path(
+        "prospects/<int:prospect_id>/messages/preview/",
+        ProspectMessagePreviewView.as_view(),
+        name="prospect-message-preview",
+    ),
     # Attachment upload and management
-    path('prospect-attachments/', ProspectAttachmentViewSet.as_view({'get': 'list', 'post': 'create'}), name='prospect-attachment-list'),
-    path('prospect-attachments/upload/', ProspectAttachmentUploadView.as_view(), name='prospect-attachment-upload'),
-    path('prospect-attachments/<int:pk>/', ProspectAttachmentViewSet.as_view({'get': 'retrieve', 'delete': 'destroy'}), name='prospect-attachment-detail'),
-    
-    path('message-templates/', MessageTemplateViewSet.as_view({'get': 'list', 'post': 'create'}), name='template-list-create'),
-    path('message-templates/<int:pk>/', MessageTemplateViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='template-detail'),
-]    
+    path(
+        "prospect-attachments/",
+        ProspectAttachmentViewSet.as_view({"get": "list", "post": "create"}),
+        name="prospect-attachment-list",
+    ),
+    path(
+        "prospect-attachments/upload/",
+        ProspectAttachmentUploadView.as_view(),
+        name="prospect-attachment-upload",
+    ),
+    path(
+        "prospect-attachments/<int:pk>/",
+        ProspectAttachmentViewSet.as_view({"get": "retrieve", "delete": "destroy"}),
+        name="prospect-attachment-detail",
+    ),
+    path(
+        "message-templates/",
+        MessageTemplateViewSet.as_view({"get": "list", "post": "create"}),
+        name="template-list-create",
+    ),
+    path(
+        "message-templates/<int:pk>/",
+        MessageTemplateViewSet.as_view(
+            {"get": "retrieve", "put": "update", "delete": "destroy"}
+        ),
+        name="template-detail",
+    ),
+    # =====================================================
+    # WEBAUTHN / FACE ID ROUTES
+    # =====================================================
+    # --- Enregistrement (nécessite d'être connecté) ---
+    path(
+        "webauthn/register/begin/",
+        WebAuthnRegisterBeginView.as_view(),
+        name="webauthn-register-begin",
+    ),
+    path(
+        "webauthn/register/complete/",
+        WebAuthnRegisterCompleteView.as_view(),
+        name="webauthn-register-complete",
+    ),
+    # --- Authentification (public) ---
+    path(
+        "webauthn/login/begin/",
+        WebAuthnLoginBeginView.as_view(),
+        name="webauthn-login-begin",
+    ),
+    path(
+        "webauthn/login/complete/",
+        WebAuthnLoginCompleteView.as_view(),
+        name="webauthn-login-complete",
+    ),
+    # --- Gestion des credentials ---
+    path(
+        "webauthn/credentials/",
+        WebAuthnCredentialListView.as_view(),
+        name="webauthn-credential-list",
+    ),
+    path(
+        "webauthn/credentials/<int:pk>/",
+        WebAuthnCredentialListView.as_view(),
+        name="webauthn-credential-delete",
+    ),
+]
