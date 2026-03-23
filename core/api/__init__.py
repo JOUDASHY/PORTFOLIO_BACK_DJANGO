@@ -19,6 +19,10 @@ from core.views_pkg.emails import (
 from core.views_pkg.experience import ExperienceViewSet
 from core.views_pkg.facebook import FacebookList
 from core.views_pkg.formation import FormationViewSet
+from core.views_pkg.gallery import (
+    GalleryCategoryViewSet,
+    GalleryImageViewSet,
+)
 from core.views_pkg.languages import LangueViewSet
 from core.views_pkg.mylogin import MyLoginViewSet
 from core.views_pkg.notifications import (
@@ -105,4 +109,7 @@ __all__ = [
     "WebAuthnLoginBeginView",
     "WebAuthnLoginCompleteView",
     "WebAuthnCredentialListView",
+    # Gallery
+    "GalleryCategoryViewSet",
+    "GalleryImageViewSet",
 ]

@@ -1,6 +1,8 @@
 from django.contrib import admin
 
 from .models import (
+    GalleryCategory,
+    GalleryImage,
     MessageTemplate,
     Prospect,
     ProspectAttachment,
@@ -118,6 +120,45 @@ class WebAuthnCredentialAdmin(admin.ModelAdmin):
             "Dates",
             {
                 "fields": ("created_at", "last_used_at"),
+            },
+        ),
+    )
+
+
+# =====================================================
+# GALLERY ADMIN
+# =====================================================
+
+
+@admin.register(GalleryCategory)
+class GalleryCategoryAdmin(admin.ModelAdmin):
+    list_display = ["name", "images_count", "created_at"]
+    search_fields = ["name", "description"]
+
+    def images_count(self, obj):
+        return obj.images.count()
+
+    images_count.short_description = "Nb images"
+
+
+@admin.register(GalleryImage)
+class GalleryImageAdmin(admin.ModelAdmin):
+    list_display = ["__str__", "category", "is_featured", "order", "created_at"]
+    list_filter = ["category", "is_featured"]
+    search_fields = ["title", "description", "tags"]
+    list_editable = ["is_featured", "order"]
+    date_hierarchy = "created_at"
+    fieldsets = (
+        (
+            "Contenu",
+            {
+                "fields": ("title", "description", "image", "tags"),
+            },
+        ),
+        (
+            "Organisation",
+            {
+                "fields": ("category", "is_featured", "order"),
             },
         ),
     )

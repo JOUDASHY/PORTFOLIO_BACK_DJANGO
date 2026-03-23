@@ -520,3 +520,67 @@ class WebAuthnCredential(models.Model):
         verbose_name = "WebAuthn Credential"
         verbose_name_plural = "WebAuthn Credentials"
         ordering = ["-created_at"]
+
+
+# =====================================================
+# GALLERY MODULE
+# =====================================================
+
+
+class GalleryCategory(models.Model):
+    """Catégorie pour organiser les images de la galerie (ex: Voyages, Projets, Événements)"""
+
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Gallery Category"
+        verbose_name_plural = "Gallery Categories"
+        ordering = ["name"]
+
+
+class GalleryImage(models.Model):
+    """Image individuelle de la galerie"""
+
+    category = models.ForeignKey(
+        GalleryCategory,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="images",
+    )
+    title = models.CharField(max_length=255, blank=True)
+    description = models.TextField(blank=True)
+    image = models.ImageField(upload_to="gallery/")
+    tags = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Tags séparés par des virgules (ex: nature, portrait, voyage)",
+    )
+    is_featured = models.BooleanField(
+        default=False,
+        help_text="Afficher en avant-plan sur le portfolio",
+    )
+    order = models.PositiveIntegerField(
+        default=0,
+        help_text="Ordre d'affichage (0 = premier)",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title or f"Image #{self.pk}"
+
+    class Meta:
+        verbose_name = "Gallery Image"
+        verbose_name_plural = "Gallery Images"
+        ordering = ["order", "-created_at"]
+
+    def delete(self, *args, **kwargs):
+        if self.image:
+            self.image.delete(save=False)
+        super().delete(*args, **kwargs)

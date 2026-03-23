@@ -1,4 +1,5 @@
-from django.urls import path
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt import views as jwt_views
 
 from .api import (
@@ -13,6 +14,8 @@ from .api import (
     ExperienceViewSet,
     FacebookList,
     FormationViewSet,
+    GalleryCategoryViewSet,
+    GalleryImageViewSet,
     HistoricMailListView,
     ImageProjetViewSet,
     KeepAliveView,
@@ -55,6 +58,13 @@ from .api import (
     get_all_users,
     mark_all_notifications_as_read,
 )
+
+# ── Router pour la galerie (gère automatiquement les actions custom) ──
+gallery_router = DefaultRouter()
+gallery_router.register(
+    r"categories", GalleryCategoryViewSet, basename="gallery-category"
+)
+gallery_router.register(r"images", GalleryImageViewSet, basename="gallery-image")
 
 urlpatterns = [
     path(
@@ -328,6 +338,10 @@ urlpatterns = [
         ),
         name="template-detail",
     ),
+    # =====================================================
+    # GALLERY ROUTES
+    # =====================================================
+    path("gallery/", include(gallery_router.urls)),
     # =====================================================
     # WEBAUTHN / FACE ID ROUTES
     # =====================================================

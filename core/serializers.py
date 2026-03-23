@@ -14,6 +14,8 @@ from .models import (
     Experience,
     Facebook,
     Formation,
+    GalleryCategory,
+    GalleryImage,
     HistoricMail,
     ImageProjet,
     Langue,
@@ -444,6 +446,62 @@ class ProspectListSerializer(serializers.ModelSerializer):
 
     def get_messages_count(self, obj):
         return obj.messages.count()
+
+
+# =====================================================
+# GALLERY SERIALIZERS
+# =====================================================
+
+
+class GalleryCategorySerializer(serializers.ModelSerializer):
+    images_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = GalleryCategory
+        fields = ["id", "name", "description", "images_count", "created_at"]
+        read_only_fields = ["id", "created_at"]
+
+    def get_images_count(self, obj):
+        return obj.images.count()
+
+
+class GalleryImageSerializer(_AbsoluteMediaUrlMixin, serializers.ModelSerializer):
+    category_name = serializers.CharField(source="category.name", read_only=True)
+    image_url = serializers.SerializerMethodField()
+    tags_list = serializers.SerializerMethodField()
+
+    class Meta:
+        model = GalleryImage
+        fields = [
+            "id",
+            "category",
+            "category_name",
+            "title",
+            "description",
+            "image",
+            "image_url",
+            "tags",
+            "tags_list",
+            "is_featured",
+            "order",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at", "image_url", "tags_list"]
+
+    def get_image_url(self, obj):
+        return self._absolute_media_url(obj.image)
+
+    def get_tags_list(self, obj):
+        """Retourne les tags sous forme de liste Python"""
+        if not obj.tags:
+            return []
+        return [tag.strip() for tag in obj.tags.split(",") if tag.strip()]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["image"] = self._absolute_media_url(instance.image)
+        return data
 
 
 class ProspectStatsSerializer(serializers.Serializer):
