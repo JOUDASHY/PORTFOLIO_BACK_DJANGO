@@ -21,7 +21,7 @@ class GalleryCategoryViewSet(viewsets.ModelViewSet):
     serializer_class = GalleryCategorySerializer
 
     def get_queryset(self):
-        return GalleryCategory.objects.all().order_by("order", "name")
+        return GalleryCategory.objects.all().order_by("name")
 
     def get_permissions(self):
         if self.action in ("list", "retrieve"):

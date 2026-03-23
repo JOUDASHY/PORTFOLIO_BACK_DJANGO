@@ -466,7 +466,9 @@ class GalleryCategorySerializer(serializers.ModelSerializer):
 
 
 class GalleryImageSerializer(_AbsoluteMediaUrlMixin, serializers.ModelSerializer):
-    category_name = serializers.CharField(source="category.name", read_only=True)
+    category_name = serializers.CharField(
+        source="category.name", read_only=True, default=None
+    )
     image_url = serializers.SerializerMethodField()
     tags_list = serializers.SerializerMethodField()
 
@@ -488,6 +490,28 @@ class GalleryImageSerializer(_AbsoluteMediaUrlMixin, serializers.ModelSerializer
             "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at", "image_url", "tags_list"]
+
+    def validate_category(self, value):
+        """
+        Accepte 0, '0' ou None comme 'sans catégorie'.
+        Évite l'erreur "Invalid pk 0 - object does not exist."
+        """
+        if value is None:
+            return None
+        # value est déjà un objet GalleryCategory résolu par DRF
+        # mais si l'ID envoyé était 0, DRF lève une erreur avant d'arriver ici.
+        return value
+
+    def to_internal_value(self, data):
+        """
+        Intercepte la valeur brute de 'category' AVANT la validation DRF.
+        Remplace 0 / '0' / '' / 'null' / 'undefined' par None.
+        """
+        mutable = data.copy() if hasattr(data, "copy") else dict(data)
+        raw_category = mutable.get("category", None)
+        if raw_category in (0, "0", "", "null", "undefined", None):
+            mutable["category"] = None
+        return super().to_internal_value(mutable)
 
     def get_image_url(self, obj):
         return self._absolute_media_url(obj.image)
