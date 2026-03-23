@@ -45,6 +45,7 @@ class Profile(models.Model):
     link_facebook = models.URLField(max_length=255, null=True, blank=True)
     link_linkedin = models.URLField(max_length=255, null=True, blank=True)
     link_github = models.URLField(max_length=255, null=True, blank=True)
+    link_instagram = models.URLField(max_length=255, null=True, blank=True)
     phone_number = models.CharField(max_length=15, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
 

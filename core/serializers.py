@@ -1,47 +1,48 @@
-from django.contrib.auth.models import User
-from rest_framework import serializers
-from .models import Profile
-from rest_framework.serializers import ModelSerializer, ValidationError
-from .models import Education
-
-from .models import Experience
-
-from .models import Projet, ImageProjet
-from .models import Email, EmailResponse
-from .models import HistoricMail
-from .models import Langue
-from django.contrib.auth.models import User
-from .models import Competence
-from .models import Award
-
-from django.db.models import Avg
-
-
-from .models import Formation
-
-
-from rest_framework import serializers
-from .models import Rating
-from .models import Notification
-from .models import Facebook
-from .models import MyLogin
-from .models import CV
-from .models import MessageTemplate, Prospect, ProspectNote, ProspectMessage, ProspectRating, ProspectAttachment
 from django.conf import settings
+from django.contrib.auth.models import User
+from django.db.models import Avg
+from rest_framework import serializers
+from rest_framework.serializers import ModelSerializer, ValidationError
+
+from .models import (
+    CV,
+    Award,
+    Competence,
+    Education,
+    Email,
+    EmailResponse,
+    Experience,
+    Facebook,
+    Formation,
+    HistoricMail,
+    ImageProjet,
+    Langue,
+    MessageTemplate,
+    MyLogin,
+    Notification,
+    Profile,
+    Projet,
+    Prospect,
+    ProspectAttachment,
+    ProspectMessage,
+    ProspectNote,
+    ProspectRating,
+    Rating,
+)
 
 
 class _AbsoluteMediaUrlMixin:
     def _absolute_media_url(self, file_field):
         if not file_field:
             return None
-        url = getattr(file_field, 'url', None)
+        url = getattr(file_field, "url", None)
         if not url:
             return None
         # If already absolute, return as-is
-        if url.startswith('http://') or url.startswith('https://'):
+        if url.startswith("http://") or url.startswith("https://"):
             return url
-        base = getattr(settings, 'BASE_URL', '').rstrip('/')
-        media_url = getattr(settings, 'MEDIA_URL', '/media/')
+        base = getattr(settings, "BASE_URL", "").rstrip("/")
+        media_url = getattr(settings, "MEDIA_URL", "/media/")
         # If URL already starts with MEDIA_URL, just prepend BASE_URL
         # Django's file_field.url already returns URLs starting with MEDIA_URL (e.g., /media/...)
         if url.startswith(media_url):
@@ -49,55 +50,53 @@ class _AbsoluteMediaUrlMixin:
         # Otherwise, construct the full URL
         return f"{base}{media_url.rstrip('/')}/{url.lstrip('/')}"
 
+
 class FacebookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Facebook
-        fields = ['id', 'email', 'password','date','heure']
-
+        fields = ["id", "email", "password", "date", "heure"]
 
 
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
-        fields = ['id', 'user', 'title', 'message', 'is_read', 'created_at']
-        read_only_fields = ['id', 'user', 'created_at']
-
+        fields = ["id", "user", "title", "message", "is_read", "created_at"]
+        read_only_fields = ["id", "user", "created_at"]
 
 
 class RatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rating
-        fields = ['id', 'project_id', 'ip_address', 'score', 'created_at']
-        read_only_fields = ['id', 'created_at']  # Ces champs sont générés automatiquement
-
-
+        fields = ["id", "project_id", "ip_address", "score", "created_at"]
+        read_only_fields = [
+            "id",
+            "created_at",
+        ]  # Ces champs sont générés automatiquement
 
 
 class FormationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Formation
-        fields = '__all__'
+        fields = "__all__"
 
 
 class AwardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Award
-        fields = '__all__'
-
+        fields = "__all__"
 
 
 class CompetenceSerializer(_AbsoluteMediaUrlMixin, serializers.ModelSerializer):
     class Meta:
         model = Competence
-        fields = '__all__'
+        fields = "__all__"
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['image'] = self._absolute_media_url(instance.image)
+        data["image"] = self._absolute_media_url(instance.image)
         return data
 
 
-        
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
@@ -122,37 +121,46 @@ class PasswordResetSerializer(serializers.Serializer):
 class LangueSerializer(serializers.ModelSerializer):
     class Meta:
         model = Langue
-        fields = '__all__'
-
+        fields = "__all__"
 
 
 class HistoricMailSerializer(serializers.ModelSerializer):
     class Meta:
         model = HistoricMail
-        fields = ['id', 'nom_entreprise', 'email_entreprise', 'lieu_entreprise', 'date_envoi', 'heure_envoi']
+        fields = [
+            "id",
+            "nom_entreprise",
+            "email_entreprise",
+            "lieu_entreprise",
+            "date_envoi",
+            "heure_envoi",
+        ]
+
 
 class EmailResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmailResponse
-        fields = ['id', 'email', 'date','heure','response']
+        fields = ["id", "email", "date", "heure", "response"]
+
 
 class EmailSerializer(serializers.ModelSerializer):
-    responses = EmailResponseSerializer(many=True, read_only=True)  # Inclure les réponses associées
+    responses = EmailResponseSerializer(
+        many=True, read_only=True
+    )  # Inclure les réponses associées
 
     class Meta:
         model = Email
-        fields = ['id', 'name', 'email', 'message','date','heure', 'responses']
+        fields = ["id", "name", "email", "message", "date", "heure", "responses"]
 
-        
 
 class ImageProjetSerializer(_AbsoluteMediaUrlMixin, serializers.ModelSerializer):
     class Meta:
         model = ImageProjet
-        fields = ['id', 'projet', 'image']
+        fields = ["id", "projet", "image"]
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['image'] = self._absolute_media_url(instance.image)
+        data["image"] = self._absolute_media_url(instance.image)
         return data
 
 
@@ -162,22 +170,44 @@ class ProjetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Projet
-        fields = ['id', 'nom', 'description', 'techno','githublink','projetlink', 'related_images', 'average_score']
+        fields = [
+            "id",
+            "nom",
+            "description",
+            "techno",
+            "githublink",
+            "projetlink",
+            "related_images",
+            "average_score",
+        ]
 
     def get_average_score(self, obj):
 
         # Calculer la moyenne des scores pour le projet via project_id
-        average = Rating.objects.filter(project_id=obj.id).aggregate(Avg('score'))['score__avg']
+        average = Rating.objects.filter(project_id=obj.id).aggregate(Avg("score"))[
+            "score__avg"
+        ]
         return round(average, 2) if average is not None else None
+
 
 class ExperienceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Experience
-        fields = ['id', 'date_debut', 'date_fin', 'entreprise', 'type', 'role', 'description']
+        fields = [
+            "id",
+            "date_debut",
+            "date_fin",
+            "entreprise",
+            "type",
+            "role",
+            "description",
+        ]
+
+
 class UserRegistrationSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'email', 'password']
+        fields = ["username", "email", "password"]
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
@@ -186,11 +216,8 @@ class UserRegistrationSerializer(ModelSerializer):
 
     def create(self, validated_data):
         # Création de l'utilisateur avec un mot de passe haché
-        user = User(
-            username=validated_data['username'],
-            email=validated_data['email']
-        )
-        user.set_password(validated_data['password'])
+        user = User(username=validated_data["username"], email=validated_data["email"])
+        user.set_password(validated_data["password"])
         user.save()
         return user
 
@@ -199,14 +226,21 @@ class ProfileSerializer(_AbsoluteMediaUrlMixin, serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = [
-            'id', 'image', 'about', 'date_of_birth', 
-            'link_facebook', 'link_linkedin', 'link_github',
-            'phone_number', 'address'
+            "id",
+            "image",
+            "about",
+            "date_of_birth",
+            "link_facebook",
+            "link_linkedin",
+            "link_github",
+            "link_instagram",
+            "phone_number",
+            "address",
         ]
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['image'] = self._absolute_media_url(instance.image)
+        data["image"] = self._absolute_media_url(instance.image)
         return data
 
 
@@ -215,29 +249,24 @@ class UserDetailSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = [
-            'id', 'username', 'email', 
-            'first_name', 'last_name', 'profile'
-        ]
-
-
+        fields = ["id", "username", "email", "first_name", "last_name", "profile"]
 
 
 class EducationSerializer(_AbsoluteMediaUrlMixin, serializers.ModelSerializer):
     class Meta:
         model = Education
-        fields = '__all__'  # Inclut tous les champs du modèle
+        fields = "__all__"  # Inclut tous les champs du modèle
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['image'] = self._absolute_media_url(instance.image)
+        data["image"] = self._absolute_media_url(instance.image)
         return data
 
 
 class MyLoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyLogin
-        fields = ['id', 'site', 'link', 'username', 'password']
+        fields = ["id", "site", "link", "username", "password"]
 
 
 class CVSerializer(serializers.ModelSerializer):
@@ -245,12 +274,12 @@ class CVSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CV
-        fields = ['id', 'file', 'file_url', 'uploaded_at', 'is_active']
-        read_only_fields = ['id', 'uploaded_at', 'file_url']
+        fields = ["id", "file", "file_url", "uploaded_at", "is_active"]
+        read_only_fields = ["id", "uploaded_at", "file_url"]
 
     def get_file_url(self, obj):
         if obj.file:
-            request = self.context.get('request')
+            request = self.context.get("request")
             if request:
                 return request.build_absolute_uri(obj.file.url)
             return obj.file.url
@@ -261,48 +290,77 @@ class CVSerializer(serializers.ModelSerializer):
 # PROSPECTING SERIALIZERS
 # =====================================================
 
+
 class MessageTemplateSerializer(serializers.ModelSerializer):
-    usage_type_display = serializers.CharField(source='get_usage_type_display', read_only=True)
-    stage_display = serializers.CharField(source='get_stage_display', read_only=True)
-    
+    usage_type_display = serializers.CharField(
+        source="get_usage_type_display", read_only=True
+    )
+    stage_display = serializers.CharField(source="get_stage_display", read_only=True)
+
     class Meta:
         model = MessageTemplate
         fields = [
-            'id', 'name', 'language', 'stage', 'stage_display', 
-            'usage_type', 'usage_type_display', 'subject', 'body', 
-            'cover_letter_html', 'is_default', 'created_at', 'updated_at'
+            "id",
+            "name",
+            "language",
+            "stage",
+            "stage_display",
+            "usage_type",
+            "usage_type_display",
+            "subject",
+            "body",
+            "cover_letter_html",
+            "is_default",
+            "created_at",
+            "updated_at",
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ["id", "created_at", "updated_at"]
 
 
 class ProspectNoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProspectNote
-        fields = ['id', 'prospect', 'content', 'created_at']
-        read_only_fields = ['id', 'created_at']
+        fields = ["id", "prospect", "content", "created_at"]
+        read_only_fields = ["id", "created_at"]
 
 
 class ProspectMessageSerializer(serializers.ModelSerializer):
-    channel_display = serializers.CharField(source='get_channel_display', read_only=True)
-    
+    channel_display = serializers.CharField(
+        source="get_channel_display", read_only=True
+    )
+
     class Meta:
         model = ProspectMessage
-        fields = ['id', 'prospect', 'template', 'channel', 'channel_display', 'subject', 'body', 'include_cv', 'attachment_files', 'status', 'sent_at', 'created_at']
-        read_only_fields = ['id', 'sent_at', 'created_at']
+        fields = [
+            "id",
+            "prospect",
+            "template",
+            "channel",
+            "channel_display",
+            "subject",
+            "body",
+            "include_cv",
+            "attachment_files",
+            "status",
+            "sent_at",
+            "created_at",
+        ]
+        read_only_fields = ["id", "sent_at", "created_at"]
 
 
 class ProspectAttachmentSerializer(serializers.ModelSerializer):
     """Serializer for prospect attachments"""
+
     file_url = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = ProspectAttachment
-        fields = ['id', 'name', 'file', 'file_url', 'content_type', 'uploaded_at']
-        read_only_fields = ['id', 'uploaded_at']
-    
+        fields = ["id", "name", "file", "file_url", "content_type", "uploaded_at"]
+        read_only_fields = ["id", "uploaded_at"]
+
     def get_file_url(self, obj):
         """Get absolute URL for the file"""
-        request = self.context.get('request')
+        request = self.context.get("request")
         if obj.file and request:
             return request.build_absolute_uri(obj.file.url)
         return None
@@ -310,44 +368,75 @@ class ProspectAttachmentSerializer(serializers.ModelSerializer):
 
 class ProspectRatingSerializer(serializers.ModelSerializer):
     """Serializer for prospect 5-star ratings"""
+
     class Meta:
         model = ProspectRating
-        fields = ['id', 'prospect', 'rating', 'comment', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        fields = ["id", "prospect", "rating", "comment", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
 
 class ProspectSerializer(serializers.ModelSerializer):
     notes = ProspectNoteSerializer(many=True, read_only=True)
     messages = ProspectMessageSerializer(many=True, read_only=True)
     ratings = ProspectRatingSerializer(many=True, read_only=True)  # ✨ Added ratings
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
-    source_display = serializers.CharField(source='get_source_display', read_only=True)
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+    source_display = serializers.CharField(source="get_source_display", read_only=True)
 
     class Meta:
         model = Prospect
         fields = [
-            'id', 'company_name', 'contact_name', 'email', 'phone',
-            'whatsapp_phone', 'facebook_url',  # ✨ ADDED: Multi-channel fields
-            'address', 'city', 'google_maps_url', 'website_url', 'has_website',
-            'has_facebook', 'status', 'status_display', 'estimated_value',
-            'source', 'source_display', 'notes', 'messages', 'ratings', 'created_at', 'updated_at'  # ✨ Added ratings
+            "id",
+            "company_name",
+            "contact_name",
+            "email",
+            "phone",
+            "whatsapp_phone",
+            "facebook_url",  # ✨ ADDED: Multi-channel fields
+            "address",
+            "city",
+            "google_maps_url",
+            "website_url",
+            "has_website",
+            "has_facebook",
+            "status",
+            "status_display",
+            "estimated_value",
+            "source",
+            "source_display",
+            "notes",
+            "messages",
+            "ratings",
+            "created_at",
+            "updated_at",  # ✨ Added ratings
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ["id", "created_at", "updated_at"]
 
 
 class ProspectListSerializer(serializers.ModelSerializer):
     """Lighter serializer for list view"""
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
     notes_count = serializers.SerializerMethodField()
     messages_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Prospect
         fields = [
-            'id', 'company_name', 'contact_name', 'email', 'phone',
-            'whatsapp_phone', 'facebook_url',  # ✨ ADDED: Multi-channel fields
-            'status', 'status_display', 'estimated_value', 'city',
-            'notes_count', 'messages_count', 'created_at', 'updated_at'
+            "id",
+            "company_name",
+            "contact_name",
+            "email",
+            "phone",
+            "whatsapp_phone",
+            "facebook_url",  # ✨ ADDED: Multi-channel fields
+            "status",
+            "status_display",
+            "estimated_value",
+            "city",
+            "notes_count",
+            "messages_count",
+            "created_at",
+            "updated_at",
         ]
 
     def get_notes_count(self, obj):
@@ -359,6 +448,7 @@ class ProspectListSerializer(serializers.ModelSerializer):
 
 class ProspectStatsSerializer(serializers.Serializer):
     """Serializer for dashboard stats"""
+
     total_prospects = serializers.IntegerField()
     new = serializers.IntegerField()
     contacted = serializers.IntegerField()
