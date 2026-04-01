@@ -236,6 +236,7 @@ class ProfileSerializer(_AbsoluteMediaUrlMixin, serializers.ModelSerializer):
             "link_linkedin",
             "link_github",
             "link_instagram",
+            "link_whatsapp",
             "phone_number",
             "address",
         ]

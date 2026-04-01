@@ -46,6 +46,7 @@ class Profile(models.Model):
     link_linkedin = models.URLField(max_length=255, null=True, blank=True)
     link_github = models.URLField(max_length=255, null=True, blank=True)
     link_instagram = models.URLField(max_length=255, null=True, blank=True)
+    link_whatsapp = models.CharField(max_length=20, null=True, blank=True)  # Numéro WhatsApp (ex: +33612345678)
     phone_number = models.CharField(max_length=15, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
 
