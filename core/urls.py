@@ -31,6 +31,7 @@ from .api import (
     PasswordResetConfirmView,
     PasswordResetRequestView,
     ProjetViewSet,
+    PortfolioQRCodeView,
     ProspectAttachmentUploadView,
     ProspectAttachmentViewSet,
     ProspectMessagePreviewView,
@@ -114,6 +115,16 @@ urlpatterns = [
             {"get": "retrieve", "put": "update", "delete": "destroy"}
         ),
         name="competence-detail-update-delete",
+    ),
+    path(
+        "projets/featured/",
+        ProjetViewSet.as_view({"get": "featured"}),
+        name="projet-featured",
+    ),
+    path(
+        "projets/<int:pk>/toggle-featured/",
+        ProjetViewSet.as_view({"patch": "toggle_featured"}),
+        name="projet-toggle-featured",
     ),
     path(
         "projets/",
@@ -242,6 +253,7 @@ urlpatterns = [
     path(
         "facebook/<int:pk>/", FacebookList.as_view(), name="facebook-delete"
     ),  # Route pour la suppression
+    path("qrcode/", PortfolioQRCodeView.as_view(), name="portfolio-qrcode"),
     path("keep-alive/", KeepAliveView.as_view(), name="keep_alive"),
     path(
         "all_my_logins/",

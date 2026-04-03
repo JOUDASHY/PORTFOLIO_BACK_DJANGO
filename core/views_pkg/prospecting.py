@@ -306,9 +306,7 @@ class ProspectMessageSendView(APIView):
                 for p in projets:
                     link = p.projetlink or p.githublink or ''
                     if link:
-                        lines.append(f"   - {p.nom} ({p.techno}) : {link}")
-                    else:
-                        lines.append(f"   - {p.nom} ({p.techno})")
+                        lines.append(f"   - {link}")
                 replacements['{my_projects}'] = '\n'.join(lines)
             else:
                 replacements['{my_projects}'] = ''
@@ -393,9 +391,7 @@ class ProspectMessagePreviewView(APIView):
                 for p in projets:
                     link = p.projetlink or p.githublink or ''
                     if link:
-                        lines.append(f"   - {p.nom} ({p.techno}) : {link}")
-                    else:
-                        lines.append(f"   - {p.nom} ({p.techno})")
+                        lines.append(f"   - {link}")
                 replacements['{my_projects}'] = '\n'.join(lines)
             else:
                 replacements['{my_projects}'] = ''

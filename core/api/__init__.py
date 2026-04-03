@@ -46,6 +46,7 @@ from core.views_pkg.prospecting import (
     ProspectStatusView,
     ProspectViewSet,
 )
+from core.views_pkg.qrcode_view import PortfolioQRCodeView
 from core.views_pkg.ratings import RatingView
 from core.views_pkg.system import KeepAliveView, get_all_users
 from core.views_pkg.visits import MonthlyVisitStats, RecordVisit, TotalVisits
@@ -112,4 +113,5 @@ __all__ = [
     # Gallery
     "GalleryCategoryViewSet",
     "GalleryImageViewSet",
+    "PortfolioQRCodeView",
 ]
