@@ -7,7 +7,7 @@ from django.utils.timezone import now
 from django.db.models import Sum, Count, Avg
 import os
 
-from core.models import Prospect, ProspectNote, ProspectMessage, MessageTemplate, ProspectRating, ProspectAttachment
+from core.models import Prospect, ProspectNote, ProspectMessage, MessageTemplate, ProspectRating, ProspectAttachment, Projet, Profile
 from core.serializers import (
     ProspectSerializer, ProspectListSerializer, ProspectNoteSerializer,
     ProspectMessageSerializer, MessageTemplateSerializer, ProspectStatsSerializer,
@@ -270,10 +270,11 @@ class ProspectMessageSendView(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     def _replace_variables(self, text, prospect):
-        """Replace template variables with prospect data"""
+        """Replace template variables with prospect data and dynamic owner info"""
         if not text:
             return text
-        
+
+        # Infos du prospect
         replacements = {
             '{company_name}': prospect.company_name or '',
             '{contact_name}': prospect.contact_name or '',
@@ -283,14 +284,41 @@ class ProspectMessageSendView(APIView):
             '{city}': prospect.city or '',
             '{estimated_value}': str(prospect.estimated_value),
         }
-        
+
+        # Infos du profil owner (user id=1)
+        try:
+            from django.contrib.auth.models import User
+            owner = User.objects.get(id=1)
+            profile = owner.profile
+            replacements['{my_email}'] = owner.email or ''
+            replacements['{my_whatsapp}'] = profile.link_whatsapp or ''
+            replacements['{my_facebook}'] = profile.link_facebook or ''
+        except Exception:
+            replacements['{my_email}'] = ''
+            replacements['{my_whatsapp}'] = ''
+            replacements['{my_facebook}'] = ''
+
+        # Projets featured
+        try:
+            projets = list(Projet.objects.filter(is_featured=True)[:5])
+            if projets:
+                lines = []
+                for p in projets:
+                    link = p.projetlink or p.githublink or ''
+                    if link:
+                        lines.append(f"   - {p.nom} ({p.techno}) : {link}")
+                    else:
+                        lines.append(f"   - {p.nom} ({p.techno})")
+                replacements['{my_projects}'] = '\n'.join(lines)
+            else:
+                replacements['{my_projects}'] = ''
+        except Exception:
+            replacements['{my_projects}'] = ''
+
         for var, value in replacements.items():
             text = text.replace(var, value)
-        
-        return text
 
-
-class ProspectMessagePreviewView(APIView):
+        return text(APIView):
     """Preview message with variables replaced"""
     permission_classes = [IsAuthenticated]
     
@@ -329,10 +357,10 @@ class ProspectMessagePreviewView(APIView):
         })
     
     def _replace_variables(self, text, prospect):
-        """Replace template variables with prospect data"""
+        """Replace template variables with prospect data and dynamic owner info"""
         if not text:
             return text
-        
+
         replacements = {
             '{company_name}': prospect.company_name or '',
             '{contact_name}': prospect.contact_name or '',
@@ -342,10 +370,38 @@ class ProspectMessagePreviewView(APIView):
             '{city}': prospect.city or '',
             '{estimated_value}': str(prospect.estimated_value),
         }
-        
+
+        try:
+            from django.contrib.auth.models import User
+            owner = User.objects.get(id=1)
+            profile = owner.profile
+            replacements['{my_email}'] = owner.email or ''
+            replacements['{my_whatsapp}'] = profile.link_whatsapp or ''
+            replacements['{my_facebook}'] = profile.link_facebook or ''
+        except Exception:
+            replacements['{my_email}'] = ''
+            replacements['{my_whatsapp}'] = ''
+            replacements['{my_facebook}'] = ''
+
+        try:
+            projets = list(Projet.objects.filter(is_featured=True)[:5])
+            if projets:
+                lines = []
+                for p in projets:
+                    link = p.projetlink or p.githublink or ''
+                    if link:
+                        lines.append(f"   - {p.nom} ({p.techno}) : {link}")
+                    else:
+                        lines.append(f"   - {p.nom} ({p.techno})")
+                replacements['{my_projects}'] = '\n'.join(lines)
+            else:
+                replacements['{my_projects}'] = ''
+        except Exception:
+            replacements['{my_projects}'] = ''
+
         for var, value in replacements.items():
             text = text.replace(var, value)
-        
+
         return text
 
 
