@@ -31,9 +31,9 @@ Voici quelques exemples de mes réalisations :{projets_lines}
 
 Je serais ravi de vous montrer ce que je pourrais créer pour {{company_name}}.
 
-📧 Email : alitsiryeddynilsen@gmail.com
-📱 WhatsApp : +261 34 XX XXX XX
-📘 Facebook : https://www.facebook.com/eddy.nilsen
+Email    : alitsiryeddynilsen@gmail.com
+WhatsApp : +261 34 XX XXX XX
+Facebook : https://www.facebook.com/eddy.nilsen
 
 N'hésitez pas à me contacter, je réponds rapidement.
 
@@ -52,9 +52,9 @@ Here are some examples of my work:{projets_lines}
 
 I'd love to show you what I could create for {{company_name}}.
 
-📧 Email: alitsiryeddynilsen@gmail.com
-📱 WhatsApp: +261 34 XX XXX XX
-📘 Facebook: https://www.facebook.com/eddy.nilsen
+Email    : alitsiryeddynilsen@gmail.com
+WhatsApp : +261 34 XX XXX XX
+Facebook : https://www.facebook.com/eddy.nilsen
 
 Feel free to reach out — I respond quickly.
 
