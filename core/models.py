@@ -94,6 +94,7 @@ class Projet(models.Model):
     techno = models.CharField(max_length=100)
     githublink = models.URLField(blank=True, null=True)  # Lien GitHub (optionnel)
     projetlink = models.URLField(blank=True, null=True)  # Lien du projet (optionnel)
+    is_featured = models.BooleanField(default=False)  # Affiché dans les templates de prospection
 
     def __str__(self):
         return self.nom

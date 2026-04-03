@@ -179,6 +179,7 @@ class ProjetSerializer(serializers.ModelSerializer):
             "techno",
             "githublink",
             "projetlink",
+            "is_featured",
             "related_images",
             "average_score",
         ]

@@ -88,14 +88,18 @@ Serializer: `CompetenceSerializer`
 ---
 
 ### Projets
-- GET `/api/projets/` (AllowAny)
-- POST `/api/projets/` (IsAuthenticated)
-- GET `/api/projets/<id>/` (IsAuthenticated)
-- PUT `/api/projets/<id>/` (IsAuthenticated)
-- DELETE `/api/projets/<id>/` (IsAuthenticated)
+- GET    `/api/projets/`                          (AllowAny)
+- POST   `/api/projets/`                          (IsAuthenticated)
+- GET    `/api/projets/<id>/`                     (AllowAny)
+- PUT    `/api/projets/<id>/`                     (IsAuthenticated)
+- PATCH  `/api/projets/<id>/`                     (IsAuthenticated)
+- DELETE `/api/projets/<id>/`                     (IsAuthenticated)
+- GET    `/api/projets/featured/`                 (AllowAny) — projets marqués `is_featured=True`
+- PATCH  `/api/projets/<id>/toggle-featured/`     (IsAuthenticated) — bascule `is_featured`
 
 Serializer: `ProjetSerializer`
-- Fields: `id, nom, description, techno, githublink, projetlink, related_images, average_score`
+- Fields: `id, nom, description, techno, githublink, projetlink, is_featured, related_images, average_score`
+  - `is_featured` boolean (défaut `false`) — marque le projet comme vitrine dans les templates de prospection
   - `related_images`: read-only list of `ImageProjetSerializer`
   - `average_score`: read-only number
 
@@ -236,6 +240,7 @@ Serializer: `MyLoginSerializer`: `id, site, link, username, password`
 Notes
 - Some endpoints are intentionally public (AllowAny); others require JWT.
 - `ProjetSerializer.related_images` is read-only; upload images via `/api/images/`.
+- `ProjetSerializer.is_featured` controls which projects appear in prospecting message templates. Toggle via `PATCH /api/projets/<id>/toggle-featured/` or pass `is_featured: true/false` on create/update.
 - Deleting `Competence`, `Education`, and `ImageProjet` removes files on disk if present.
 - Notifications also broadcast via WebSocket group `notifications_<user.id>` when created through the list/create endpoint.
 
@@ -290,8 +295,12 @@ Competences
 
 Projets
 - POST/PUT `/api/projets/`, `/api/projets/<id>/`
-  - Request: `nom` string, `description` string, `techno` string, `githublink` url?, `projetlink` url?
+  - Request: `nom` string, `description` string, `techno` string, `githublink` url?, `projetlink` url?, `is_featured` boolean?
   - Response: `id` number, same fields plus `related_images` (read-only array), `average_score` number|null
+- GET `/api/projets/featured/`
+  - Response: same shape, filtrée sur `is_featured=true`
+- PATCH `/api/projets/<id>/toggle-featured/`
+  - Response: `{ id number, is_featured boolean }`
 
 Images
 - POST `/api/images/`
