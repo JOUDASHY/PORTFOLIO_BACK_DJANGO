@@ -318,7 +318,10 @@ class ProspectMessageSendView(APIView):
         for var, value in replacements.items():
             text = text.replace(var, value)
 
-        return text(APIView):
+        return text
+
+
+class ProspectMessagePreviewView(APIView):
     """Preview message with variables replaced"""
     permission_classes = [IsAuthenticated]
     
