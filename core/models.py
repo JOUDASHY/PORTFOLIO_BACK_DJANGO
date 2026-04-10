@@ -1,6 +1,8 @@
 import hashlib
 import ipaddress
 import mimetypes
+import os
+import re
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -11,6 +13,15 @@ from django.core.validators import (
 )
 from django.db import models
 from django.utils.timezone import now
+
+
+def sanitize_upload_path(folder):
+    """Retourne une fonction upload_to qui remplace les espaces par des underscores."""
+    def upload_to(instance, filename):
+        name, ext = os.path.splitext(filename)
+        clean_name = re.sub(r'\s+', '_', name)
+        return f"{folder}/{clean_name}{ext}"
+    return upload_to
 
 
 class Notification(models.Model):
@@ -39,7 +50,7 @@ class Formation(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-    image = models.ImageField(upload_to="profile_images/", null=True, blank=True)
+    image = models.ImageField(upload_to=sanitize_upload_path("profile_images"), null=True, blank=True)
     about = models.TextField(null=True, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     link_facebook = models.URLField(max_length=255, null=True, blank=True)
@@ -61,7 +72,7 @@ class Profile(models.Model):
 
 
 class Education(models.Model):
-    image = models.ImageField(upload_to="education_images/", blank=True, null=True)
+    image = models.ImageField(upload_to=sanitize_upload_path("education_images"), blank=True, null=True)
     nom_ecole = models.CharField(max_length=255)
     nom_parcours = models.CharField(max_length=255)
     annee_debut = models.IntegerField()
@@ -120,7 +131,7 @@ class ImageProjet(models.Model):
     projet = models.ForeignKey(
         Projet, related_name="related_images", on_delete=models.CASCADE
     )  # Nom unique
-    image = models.ImageField(upload_to="projets/images/")
+    image = models.ImageField(upload_to=sanitize_upload_path("projets/images"))
 
     def __str__(self):
         return f"Image de {self.projet.nom}"
@@ -185,7 +196,7 @@ def validate_svg(file):
 
 class Competence(models.Model):
     image = models.FileField(
-        upload_to="competences/images/",
+        upload_to=sanitize_upload_path("competences/images"),
         blank=True,
         null=True,
         validators=[
@@ -237,7 +248,7 @@ class CV(models.Model):
     """Model for storing CV PDF file"""
 
     file = models.FileField(
-        upload_to="cv/", validators=[FileExtensionValidator(allowed_extensions=["pdf"])]
+        upload_to=sanitize_upload_path("cv"), validators=[FileExtensionValidator(allowed_extensions=["pdf"])]
     )
     uploaded_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
@@ -432,7 +443,7 @@ class ProspectAttachment(models.Model):
     """File attachments for prospecting emails"""
 
     name = models.CharField(max_length=255)  # Original filename
-    file = models.FileField(upload_to="prospect_attachments/")
+    file = models.FileField(upload_to=sanitize_upload_path("prospect_attachments"))
     uploaded_at = models.DateTimeField(auto_now_add=True)
     content_type = models.CharField(max_length=100, blank=True)  # MIME type
 
@@ -557,7 +568,7 @@ class GalleryImage(models.Model):
     )
     title = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
-    image = models.ImageField(upload_to="gallery/")
+    image = models.ImageField(upload_to=sanitize_upload_path("gallery"))
     tags = models.CharField(
         max_length=255,
         blank=True,
