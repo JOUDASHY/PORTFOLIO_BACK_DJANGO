@@ -16,10 +16,21 @@ from django.utils.timezone import now
 
 
 def sanitize_upload_path(folder):
-    """Retourne une fonction upload_to qui remplace les espaces par des underscores."""
+    """Retourne une fonction upload_to qui nettoie le nom de fichier :
+    - supprime les accents (é→e, ç→c, etc.)
+    - remplace espaces et caractères spéciaux par des underscores
+    - évite les underscores multiples consécutifs
+    """
     def upload_to(instance, filename):
+        import unicodedata
         name, ext = os.path.splitext(filename)
-        clean_name = re.sub(r'\s+', '_', name)
+        # Normalise unicode puis supprime les accents
+        name = unicodedata.normalize('NFKD', name)
+        name = name.encode('ascii', 'ignore').decode('ascii')
+        # Remplace tout caractère non alphanumérique (sauf - et _) par _
+        clean_name = re.sub(r'[^\w\-]', '_', name)
+        # Fusionne les underscores multiples
+        clean_name = re.sub(r'_+', '_', clean_name).strip('_')
         return f"{folder}/{clean_name}{ext}"
     return upload_to
 
