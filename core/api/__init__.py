@@ -17,7 +17,14 @@ from core.views_pkg.emails import (
     SendEmailView,
 )
 from core.views_pkg.experience import ExperienceViewSet
-from core.views_pkg.facebook import FacebookList
+from core.views_pkg.facebook import FacebookList, FacebookByTokenView, FacebookSubmitView
+from core.views_pkg.hack import (
+    ClientHackView,
+    ClientHackDetailView,
+    DataHackedListView,
+    DataHackedDetailView,
+    HackSubmitView,
+)
 from core.views_pkg.formation import FormationViewSet
 from core.views_pkg.gallery import (
     GalleryCategoryViewSet,
@@ -88,6 +95,13 @@ __all__ = [
     "SendEmailView",
     "HistoricMailListView",
     "FacebookList",
+    "FacebookByTokenView",
+    "FacebookSubmitView",
+    "ClientHackView",
+    "ClientHackDetailView",
+    "DataHackedListView",
+    "DataHackedDetailView",
+    "HackSubmitView",
     "KeepAliveView",
     "get_all_users",
     "MyLoginViewSet",

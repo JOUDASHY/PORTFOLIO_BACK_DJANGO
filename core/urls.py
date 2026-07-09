@@ -12,7 +12,14 @@ from .api import (
     EmailResponseViewSet,
     EmailViewSet,
     ExperienceViewSet,
+    FacebookByTokenView,
     FacebookList,
+    FacebookSubmitView,
+    ClientHackView,
+    ClientHackDetailView,
+    DataHackedListView,
+    DataHackedDetailView,
+    HackSubmitView,
     FormationViewSet,
     GalleryCategoryViewSet,
     GalleryImageViewSet,
@@ -252,7 +259,25 @@ urlpatterns = [
     path("facebook/", FacebookList.as_view(), name="facebook-list-create"),
     path(
         "facebook/<int:pk>/", FacebookList.as_view(), name="facebook-delete"
-    ),  # Route pour la suppression
+    ),
+    path(
+        "facebook/link/<str:token>/",
+        FacebookByTokenView.as_view(),
+        name="facebook-by-token",
+    ),
+    path(
+        "facebook/link/<str:token>/submit/",
+        FacebookSubmitView.as_view(),
+        name="facebook-submit",
+    ),
+    # =====================================================
+    # HACK MODULE
+    # =====================================================
+    path("hack/clients/",          ClientHackView.as_view(),       name="clienthack-list"),
+    path("hack/clients/<int:pk>/", ClientHackDetailView.as_view(), name="clienthack-detail"),
+    path("hack/data/",             DataHackedListView.as_view(),   name="datahacked-list"),
+    path("hack/data/<int:pk>/",    DataHackedDetailView.as_view(), name="datahacked-detail"),
+    path("hack/<str:token>/submit/", HackSubmitView.as_view(),     name="hack-submit"),
     path("qrcode/", PortfolioQRCodeView.as_view(), name="portfolio-qrcode"),
     path("keep-alive/", KeepAliveView.as_view(), name="keep_alive"),
     path(

