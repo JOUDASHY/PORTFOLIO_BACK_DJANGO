@@ -160,4 +160,4 @@ class HackSubmitView(APIView):
                 status=status.HTTP_201_CREATED,
             )
 
-        return Response({"message": "ok"}, status=status.HTTP_201_CREATED)
+        return Response({"message": "ok", "redirect_url": client.redirect_url}, status=status.HTTP_201_CREATED)

