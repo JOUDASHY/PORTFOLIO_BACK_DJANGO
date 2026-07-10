@@ -37,6 +37,7 @@ class ClientHackView(APIView):
 class ClientHackDetailView(APIView):
     """
     GET    /hack/clients/<id>/   → détail + toutes les soumissions du client
+    PATCH  /hack/clients/<id>/   → modifier un client (is_active, etc.)
     DELETE /hack/clients/<id>/   → supprimer le client
     """
     permission_classes = [IsAuthenticated]
@@ -52,6 +53,18 @@ class ClientHackDetailView(APIView):
         sub_data       = DataHackedSerializer(submissions, many=True).data
         client_data["submissions"] = sub_data
         return Response(client_data)
+
+    def patch(self, request, pk):
+        try:
+            client = ClientHack.objects.get(pk=pk)
+        except ClientHack.DoesNotExist:
+            return Response({"error": "Client introuvable."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ClientHackSerializer(client, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
         try:

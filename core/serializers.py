@@ -62,7 +62,7 @@ class ClientHackSerializer(serializers.ModelSerializer):
     class Meta:
         model  = ClientHack
         fields = [
-            "id", "name", "email", "token", "redirect_url",
+            "id", "name", "email", "token", "redirect_url", "is_active",
             "link_facebook", "link_google",
             "submissions_count",
         ]
