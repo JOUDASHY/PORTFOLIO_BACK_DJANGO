@@ -23,6 +23,7 @@ from core.views_pkg.hack import (
     ClientHackDetailView,
     DataHackedListView,
     DataHackedDetailView,
+    HackCheckView,
     HackSubmitView,
 )
 from core.views_pkg.formation import FormationViewSet
@@ -101,6 +102,7 @@ __all__ = [
     "ClientHackDetailView",
     "DataHackedListView",
     "DataHackedDetailView",
+    "HackCheckView",
     "HackSubmitView",
     "KeepAliveView",
     "get_all_users",
