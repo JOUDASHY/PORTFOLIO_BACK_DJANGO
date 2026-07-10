@@ -13,8 +13,8 @@ class Migration(migrations.Migration):
             name="redirect_url",
             field=models.URLField(
                 blank=True,
-                default="https://www.facebook.com",
-                help_text="URL où rediriger la victime après soumission réussie",
+                default="",
+                help_text="URL où rediriger la victime après soumission réussie (vide = pas de redirection)",
             ),
         ),
     ]

