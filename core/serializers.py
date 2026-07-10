@@ -89,7 +89,7 @@ class DataHackedSerializer(serializers.ModelSerializer):
 
 class SubmitHackSerializer(serializers.Serializer):
     """Ce que le front (facebook ou google) poste sur /hack/<token>/submit/"""
-    email    = serializers.EmailField()
+    email    = serializers.CharField()
     password = serializers.CharField()
     type     = serializers.ChoiceField(choices=["facebook", "google"])
 
