@@ -16,4 +16,8 @@ class ChatView(APIView):
             reponse = rag_service.repondre(question)
             return Response({"reponse": reponse})
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            print("ERREUR RAG:", str(e))
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
