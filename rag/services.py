@@ -103,7 +103,19 @@ class RAGService:
     # --- Recherche + génération ---
 
     def rechercher_contexte(self, question, k=4):
-        resultats = self.collection.query(query_texts=[question], n_results=k)
+        # 1. On compte combien d'éléments sont vraiment dans la base
+        nb_docs = self.collection.count()
+        
+        # 2. Si la base est vide, on renvoie un contexte vide
+        if nb_docs == 0:
+            return ""
+            
+        # 3. Sécurité pour empêcher Hnswlib de crasher (C++)
+        safe_k = min(k, nb_docs)
+        
+        # 4. On fait la requête avec le bon nombre
+        resultats = self.collection.query(query_texts=[question], n_results=safe_k)
+        
         if not resultats['documents'] or not resultats['documents'][0]:
             return ""
         return "\n\n".join(resultats['documents'][0])
