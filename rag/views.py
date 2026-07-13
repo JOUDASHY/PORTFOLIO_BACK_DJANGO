@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .services import RAGService
 
-# We initialize it outside to keep chroma and groq instances in memory across requests
+# Initialized once: CV/API context loaded in memory, Groq client reused across requests
 rag_service = RAGService()
 
 class ChatView(APIView):

@@ -1,66 +1,62 @@
-import chromadb
-from chromadb.utils import embedding_functions
-from groq import Groq
-from django.conf import settings
-import pdfplumber
 import json
 import os
 
-# FIX POUR IIS : Empêche PyTorch de faire exploser la mémoire ou le stack des threads d'IIS
-os.environ["OMP_NUM_THREADS"] = "1"
-os.environ["MKL_NUM_THREADS"] = "1"
-os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:32"
+import pdfplumber
+from django.conf import settings
+from groq import Groq
 
-# FIX POUR IIS : Empêche FastCGI de crasher brutalement quand l'IA essaie d'afficher une barre de chargement dans la console
-os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
-os.environ["ANONYMIZED_TELEMETRY"] = "False"
 
 class RAGService:
     def __init__(self):
-        # We ensure the persistence directory exists
-        if not os.path.exists(settings.CHROMA_PERSIST_DIR):
-            os.makedirs(settings.CHROMA_PERSIST_DIR, exist_ok=True)
-            
-        self.client_chroma = chromadb.PersistentClient(path=settings.CHROMA_PERSIST_DIR)
-        self.embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
-            model_name="all-MiniLM-L6-v2"
-        )
-        self.collection = self.client_chroma.get_or_create_collection(
-            name="mon_profil",
-            embedding_function=self.embedding_fn
-        )
-        
-        # Groq client will fail if GROQ_API_KEY is not set, so we can initialize it here
-        # But for robustness, we check it before calling.
-        api_key = getattr(settings, 'GROQ_API_KEY', None)
-        if api_key:
-            self.groq_client = Groq(api_key=api_key)
-        else:
-            self.groq_client = None
+        api_key = getattr(settings, "GROQ_API_KEY", None)
+        self.groq_client = Groq(api_key=api_key) if api_key else None
+        self.contexte = self._charger_contexte()
 
-    # --- Extraction ---
+    def _charger_contexte(self):
+        base_dir = settings.BASE_DIR
+        chemin_cv = os.path.join(base_dir, "CV_Eddy_Nilsen.pdf")
+        chemin_api = os.path.join(base_dir, "API_DOCUMENTATION.md")
+
+        parties = []
+
+        if os.path.exists(chemin_cv):
+            cv_texte = self.extraire_cv(chemin_cv)
+            if cv_texte.strip():
+                parties.append(f"=== CV ===\n{cv_texte}")
+        else:
+            print(f"Fichier introuvable: {chemin_cv}")
+
+        if os.path.exists(chemin_api):
+            api_texte = self.extraire_doc_api(chemin_api)
+            if api_texte.strip():
+                parties.append(f"=== DOCUMENTATION API ===\n{api_texte}")
+        else:
+            print(f"Fichier introuvable: {chemin_api}")
+
+        return "\n\n".join(parties)
 
     def extraire_cv(self, chemin_pdf):
         texte = ""
         try:
             with pdfplumber.open(chemin_pdf) as pdf:
                 for page in pdf.pages:
-                    texte += page.extract_text() + "\n"
+                    page_text = page.extract_text()
+                    if page_text:
+                        texte += page_text + "\n"
         except Exception as e:
             print(f"Erreur extraction CV: {e}")
         return texte
 
-    def extraire_doc_api(self, chemin_json_ou_md):
+    def extraire_doc_api(self, chemin_md):
         texte = ""
         try:
-            # Simple handle for markdown if json is not provided
-            if chemin_json_ou_md.endswith('.md'):
-                with open(chemin_json_ou_md, 'r', encoding='utf-8') as f:
+            if chemin_md.endswith(".md"):
+                with open(chemin_md, "r", encoding="utf-8") as f:
                     texte = f.read()
             else:
-                with open(chemin_json_ou_md, 'r', encoding='utf-8') as f:
+                with open(chemin_md, "r", encoding="utf-8") as f:
                     spec = json.load(f)
-                for route, methodes in spec.get('paths', {}).items():
+                for route, methodes in spec.get("paths", {}).items():
                     for methode, details in methodes.items():
                         texte += f"Route: {methode.upper()} {route}\n"
                         texte += f"Description: {details.get('summary', details.get('description', ''))}\n\n"
@@ -68,85 +64,26 @@ class RAGService:
             print(f"Erreur extraction API: {e}")
         return texte
 
-    # --- Découpage en chunks ---
-
-    def decouper_en_chunks(self, texte, taille=500, overlap=50):
-        chunks = []
-        i = 0
-        while i < len(texte):
-            chunks.append(texte[i:i + taille])
-            i += taille - overlap
-        return chunks
-
-    # --- Indexation ---
-
-    def indexer_documents(self, chemin_cv, chemin_api):
-        cv_texte = self.extraire_cv(chemin_cv)
-        api_texte = self.extraire_doc_api(chemin_api)
-
-        chunks_cv = [(c, "CV") for c in self.decouper_en_chunks(cv_texte)] if cv_texte else []
-        chunks_api = [(c, "API") for c in self.decouper_en_chunks(api_texte)] if api_texte else []
-        tous_chunks = chunks_cv + chunks_api
-        
-        if not tous_chunks:
-            return 0
-
-        ids = [f"chunk_{i}" for i in range(len(tous_chunks))]
-        documents = [c[0] for c in tous_chunks]
-        metadatas = [{"source": c[1]} for c in tous_chunks]
-
-        # Reset la collection avant réindexation
-        try:
-            self.client_chroma.delete_collection("mon_profil")
-        except:
-            pass
-            
-        self.collection = self.client_chroma.get_or_create_collection(
-            name="mon_profil",
-            embedding_function=self.embedding_fn
-        )
-
-        self.collection.add(ids=ids, documents=documents, metadatas=metadatas)
-        return len(tous_chunks)
-
-    # --- Recherche + génération ---
-
-    def rechercher_contexte(self, question, k=4):
-        # 1. On compte combien d'éléments sont vraiment dans la base
-        nb_docs = self.collection.count()
-        
-        # 2. Si la base est vide, on renvoie un contexte vide
-        if nb_docs == 0:
-            return ""
-            
-        # 3. Sécurité pour empêcher Hnswlib de crasher (C++)
-        safe_k = min(k, nb_docs)
-        
-        # 4. On fait la requête avec le bon nombre
-        resultats = self.collection.query(query_texts=[question], n_results=safe_k)
-        
-        if not resultats['documents'] or not resultats['documents'][0]:
-            return ""
-        return "\n\n".join(resultats['documents'][0])
-
     def repondre(self, question):
         if not self.groq_client:
             return "Erreur: Clé API Groq non configurée sur le serveur."
-            
-        contexte = self.rechercher_contexte(question)
+
+        if not self.contexte.strip():
+            return "Erreur: Aucun document (CV/API) trouvé sur le serveur."
 
         completion = self.groq_client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
                 {
                     "role": "system",
-                    "content": f"""Tu es l'assistant personnel de l'auteur de ce CV et de cette API. Tu réponds aux questions sur le profil et l'API en te basant UNIQUEMENT sur le contexte fourni.
-Si l'information n'est pas dans le contexte, dis que tu ne sais pas.
-
-Contexte:
-{contexte}"""
+                    "content": (
+                        "Tu es l'assistant personnel de l'auteur de ce CV et de cette API. "
+                        "Réponds UNIQUEMENT à partir du contexte ci-dessous. "
+                        "Si l'information n'est pas dans le contexte, dis que tu ne sais pas.\n\n"
+                        f"Contexte:\n{self.contexte}"
+                    ),
                 },
-                {"role": "user", "content": question}
-            ]
+                {"role": "user", "content": question},
+            ],
         )
         return completion.choices[0].message.content
