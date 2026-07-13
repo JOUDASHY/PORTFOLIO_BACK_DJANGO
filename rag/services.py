@@ -6,6 +6,11 @@ import pdfplumber
 import json
 import os
 
+# FIX POUR IIS : Empêche PyTorch de faire exploser la mémoire ou le stack des threads d'IIS
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:32"
+
 class RAGService:
     def __init__(self):
         # We ensure the persistence directory exists
