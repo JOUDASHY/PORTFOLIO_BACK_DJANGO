@@ -208,3 +208,6 @@ if DEBUG:
 # RAG Configuration
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", os.path.join(BASE_DIR, "chroma_db"))
+
+# Forcer le cache HuggingFace dans le dossier du projet (Règle les erreurs de droits IIS)
+os.environ["HF_HOME"] = os.path.join(BASE_DIR, "hf_cache")
