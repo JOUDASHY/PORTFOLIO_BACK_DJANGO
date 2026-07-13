@@ -11,6 +11,10 @@ os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:32"
 
+# FIX POUR IIS : Empêche FastCGI de crasher brutalement quand l'IA essaie d'afficher une barre de chargement dans la console
+os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+
 class RAGService:
     def __init__(self):
         # We ensure the persistence directory exists
