@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework_simplejwt.token_blacklist",
     "channels",
+    "rag",
 ]
 
 # --------------------------------------------------
@@ -202,3 +203,8 @@ WEBAUTHN_ORIGIN = os.getenv("WEBAUTHN_ORIGIN", "http://localhost:5173")
 if DEBUG:
     print("DB_DATABASE:", os.getenv("DB_DATABASE"))
     print("DB_USERNAME:", os.getenv("DB_USERNAME"))
+
+# --------------------------------------------------
+# RAG Configuration
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", os.path.join(BASE_DIR, "chroma_db"))
