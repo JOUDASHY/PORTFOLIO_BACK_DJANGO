@@ -2,8 +2,12 @@ import os
 
 from django.conf import settings
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from .models import ChatHistory
+from .serializers import ChatHistorySerializer
 
 _rag_service = None
 
@@ -47,8 +51,7 @@ class RAGHealthView(APIView):
 
 
 class ChatView(APIView):
-    authentication_classes = []
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         question = request.data.get("question")
@@ -58,8 +61,23 @@ class ChatView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        user = request.user
+
+        ChatHistory.objects.create(
+            user=user,
+            role="user",
+            content=question,
+        )
+
         try:
             reponse = get_rag_service().repondre(question)
+
+            ChatHistory.objects.create(
+                user=user,
+                role="assistant",
+                content=reponse,
+            )
+
             return Response({"reponse": reponse})
         except Exception as e:
             import traceback
@@ -75,3 +93,19 @@ class ChatView(APIView):
                 {"error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class ChatHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        messages = ChatHistory.objects.filter(user=request.user)
+        serializer = ChatHistorySerializer(messages, many=True)
+        return Response(serializer.data)
+
+    def delete(self, request):
+        deleted_count, _ = ChatHistory.objects.filter(user=request.user).delete()
+        return Response(
+            {"message": f"{deleted_count} message(s) supprimé(s)"},
+            status=status.HTTP_200_OK,
+        )
