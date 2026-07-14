@@ -35,7 +35,20 @@ class RAGService:
 
     def _charger_documents(self):
         base_dir = settings.BASE_DIR
-        chemin_cv = os.path.join(base_dir, "CV_Eddy_Nilsen.pdf")
+
+        chemin_cv = None
+        try:
+            from core.models import CV
+
+            cv = CV.objects.filter(is_active=True).first()
+            if cv and cv.file:
+                chemin_cv = cv.file.path
+        except Exception as e:
+            print(f"Erreur accès CV dynamique: {e}")
+
+        if not chemin_cv or not os.path.exists(chemin_cv):
+            chemin_cv = os.path.join(base_dir, "CV_Eddy_Nilsen.pdf")
+
         chemin_api = os.path.join(base_dir, "API_DOCUMENTATION.md")
         tous_les_chunks = []
 
