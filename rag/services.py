@@ -116,7 +116,7 @@ class RAGService:
                 resultats.append(self.chunks[i])
         return resultats
 
-    def repondre(self, question):
+    def repondre(self, question, user=None, conversation=None):
         if not self.groq_client:
             return "Erreur: Clé API Groq non configurée sur le serveur."
 
@@ -132,19 +132,37 @@ class RAGService:
                 f"[{c['source']}]\n{c['texte']}" for c in morceaux
             )
 
+        historique = []
+        if user:
+            try:
+                from .models import ChatHistory
+
+                query = ChatHistory.objects.filter(user=user)
+                if conversation:
+                    query = query.filter(conversation=conversation)
+
+                dernier_messages = query.order_by("-created_at")[:10]
+                for msg in reversed(dernier_messages):
+                    historique.append({"role": msg.role, "content": msg.content})
+            except Exception as e:
+                print(f"Erreur chargement historique: {e}")
+
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "Tu es l'assistant personnel de l'auteur de ce CV et de cette API. "
+                    "Réponds UNIQUEMENT à partir du contexte ci-dessous. "
+                    "Si l'information n'est pas dans le contexte, dis que tu ne sais pas.\n\n"
+                    f"Contexte:\n{contexte}"
+                ),
+            },
+            *historique,
+            {"role": "user", "content": question},
+        ]
+
         completion = self.groq_client.chat.completions.create(
             model="llama-3.3-70b-versatile",
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "Tu es l'assistant personnel de l'auteur de ce CV et de cette API. "
-                        "Réponds UNIQUEMENT à partir du contexte ci-dessous. "
-                        "Si l'information n'est pas dans le contexte, dis que tu ne sais pas.\n\n"
-                        f"Contexte:\n{contexte}"
-                    ),
-                },
-                {"role": "user", "content": question},
-            ],
+            messages=messages,
         )
         return completion.choices[0].message.content

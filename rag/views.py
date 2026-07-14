@@ -1,13 +1,18 @@
 import os
 
 from django.conf import settings
+from django.utils.text import Truncator
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import ChatHistory
-from .serializers import ChatHistorySerializer
+from .models import ChatHistory, Conversation
+from .serializers import (
+    ChatHistorySerializer,
+    ConversationListSerializer,
+    ConversationSerializer,
+)
 
 _rag_service = None
 
@@ -51,6 +56,80 @@ class RAGHealthView(APIView):
         )
 
 
+class ConversationListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        conversations = Conversation.objects.filter(user=request.user)
+        serializer = ConversationListSerializer(conversations, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        title = request.data.get("title", "Nouvelle conversation")
+        conversation = Conversation.objects.create(user=request.user, title=title)
+        return Response(
+            ConversationSerializer(conversation).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class ConversationDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, conversation_id):
+        try:
+            conversation = Conversation.objects.get(
+                id=conversation_id, user=request.user
+            )
+        except Conversation.DoesNotExist:
+            return Response(
+                {"error": "Conversation introuvable"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = ConversationSerializer(conversation)
+        return Response(serializer.data)
+
+    def delete(self, request, conversation_id):
+        try:
+            conversation = Conversation.objects.get(
+                id=conversation_id, user=request.user
+            )
+        except Conversation.DoesNotExist:
+            return Response(
+                {"error": "Conversation introuvable"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        conversation.delete()
+        return Response(
+            {"message": "Conversation supprimée"},
+            status=status.HTTP_200_OK,
+        )
+
+    def patch(self, request, conversation_id):
+        try:
+            conversation = Conversation.objects.get(
+                id=conversation_id, user=request.user
+            )
+        except Conversation.DoesNotExist:
+            return Response(
+                {"error": "Conversation introuvable"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        title = request.data.get("title")
+        if title:
+            conversation.title = title
+            conversation.save()
+            return Response(ConversationSerializer(conversation).data)
+
+        return Response(
+            {"error": "Le champ 'title' est requis"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
 class ChatView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -63,23 +142,49 @@ class ChatView(APIView):
             )
 
         user = request.user
+        conversation_id = request.data.get("conversation_id")
+
+        if conversation_id:
+            try:
+                conversation = Conversation.objects.get(
+                    id=conversation_id, user=user
+                )
+            except Conversation.DoesNotExist:
+                return Response(
+                    {"error": "Conversation introuvable"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+        else:
+            title = Truncator(question).chars(80, ellipsis="...")
+            conversation = Conversation.objects.create(user=user, title=title)
 
         ChatHistory.objects.create(
             user=user,
+            conversation=conversation,
             role="user",
             content=question,
         )
 
         try:
-            reponse = get_rag_service().repondre(question)
+            reponse = get_rag_service().repondre(
+                question, user=user, conversation=conversation
+            )
 
             ChatHistory.objects.create(
                 user=user,
+                conversation=conversation,
                 role="assistant",
                 content=reponse,
             )
 
-            return Response({"reponse": reponse})
+            conversation.save()
+
+            return Response(
+                {
+                    "reponse": reponse,
+                    "conversation_id": conversation.id,
+                }
+            )
         except Exception as e:
             import traceback
 
@@ -94,19 +199,3 @@ class ChatView(APIView):
                 {"error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-
-
-class ChatHistoryView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        messages = ChatHistory.objects.filter(user=request.user)
-        serializer = ChatHistorySerializer(messages, many=True)
-        return Response(serializer.data)
-
-    def delete(self, request):
-        deleted_count, _ = ChatHistory.objects.filter(user=request.user).delete()
-        return Response(
-            {"message": f"{deleted_count} message(s) supprimé(s)"},
-            status=status.HTTP_200_OK,
-        )
