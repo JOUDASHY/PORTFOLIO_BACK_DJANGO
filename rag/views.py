@@ -1,7 +1,6 @@
 import os
 
 from django.conf import settings
-from django.utils.text import Truncator
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -155,7 +154,7 @@ class ChatView(APIView):
                     status=status.HTTP_404_NOT_FOUND,
                 )
         else:
-            title = Truncator(question).chars(80, ellipsis="...")
+            title = question[:80] + ("..." if len(question) > 80 else "")
             conversation = Conversation.objects.create(user=user, title=title)
 
         ChatHistory.objects.create(
