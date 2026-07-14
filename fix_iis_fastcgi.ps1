@@ -15,4 +15,8 @@ $appcmd = "$env:windir\system32\inetsrv\appcmd.exe"
 & $appcmd set config /section:fastCgi `
   "/[fullPath='$python',arguments='$wfastcgi'].environmentVariables.[name='DJANGO_SETTINGS_MODULE'].value:back_django_portfolio_me.settings"
 
+# Groq API key (remplacer YOUR_KEY par la vraie clé, ou lire depuis .env)
+& $appcmd set config /section:fastCgi `
+  "/+[fullPath='$python',arguments='$wfastcgi'].environmentVariables.[name='GROQ_API_KEY',value='YOUR_KEY']"
+
 Write-Host "Done. Run iisreset."
