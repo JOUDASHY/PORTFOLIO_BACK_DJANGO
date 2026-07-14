@@ -133,8 +133,9 @@ DATABASES = {
         "HOST": os.getenv("DB_HOST", "127.0.0.1"),
         "PORT": os.getenv("DB_PORT", "3306"),
         "CONN_MAX_AGE": None,
-        # SSL désactivé pour Windows local
-        #'OPTIONS': {'ssl': {'ssl-mode': 'REQUIRED'}},
+        "OPTIONS": {
+            "charset": "utf8mb4",
+        },
     }
 }
 
