@@ -30,22 +30,23 @@ class RAGHealthView(APIView):
         chemin_cv = os.path.join(base_dir, "CV_Eddy_Nilsen.pdf")
         chemin_api = os.path.join(base_dir, "API_DOCUMENTATION.md")
 
-        services_path = os.path.join(base_dir, "rag", "services.py")
-        groq_only = False
         try:
-            with open(services_path, "r", encoding="utf-8") as f:
-                content = f.read()
-            groq_only = "chromadb" not in content
-        except OSError:
-            pass
+            rag = get_rag_service()
+            nb_chunks = len(rag.chunks)
+            bm25_ok = rag.bm25 is not None
+        except Exception:
+            nb_chunks = 0
+            bm25_ok = False
 
         return Response(
             {
                 "status": "ok",
-                "mode": "groq-only" if groq_only else "legacy-chroma",
+                "mode": "bm25-rag",
                 "groq_configured": bool(getattr(settings, "GROQ_API_KEY", None)),
                 "cv_exists": os.path.exists(chemin_cv),
                 "api_exists": os.path.exists(chemin_api),
+                "chunks_loaded": nb_chunks,
+                "bm25_ready": bm25_ok,
             }
         )
 
