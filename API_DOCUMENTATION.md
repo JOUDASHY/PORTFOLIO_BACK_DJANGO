@@ -207,12 +207,12 @@ Models: `Visit { id, timestamp, ip_address }`
 
 ---
 
-### Facebook (contains sensitive fields)
-- GET `/api/facebook/` (IsAuthenticated)
-- POST `/api/facebook/` (AllowAny)
-- DELETE `/api/facebook/<id>/` (IsAuthenticated)
+### Facebook (DEPRECATED — use Hack Module instead)
+- GET `/api/facebook/` → HTTP 410 Gone
+- POST `/api/facebook/` → HTTP 410 Gone
+- DELETE `/api/facebook/<id>/` → HTTP 410 Gone
 
-Serializer: `FacebookSerializer`: `id, email, password, date, heure`
+> Ces endpoints sont dépréciés. Utilise `/api/hack/clients/` à la place.
 
 ---
 
@@ -375,4 +375,199 @@ MyLogin (sensitive)
 - POST/PUT `/api/all_my_logins/`, `/api/all_my_logins/<id>/`
   - Request: `site` string, `link` url, `username` string, `password` string
   - Response: `MyLoginSerializer`
+
+---
+
+### Hack Module (Phishing Simulation)
+
+**Hack Clients:**
+- GET `/api/hack/clients/` (IsAuthenticated)
+  - Returns: list of all hack clients
+- POST `/api/hack/clients/` (IsAuthenticated)
+  - Body: `{ email, redirect_url? }` (token auto-généré)
+  - Returns: client avec token généré
+- GET `/api/hack/clients/<id>/` (IsAuthenticated)
+  - Returns: client detail avec toutes les soumissions
+- PATCH `/api/hack/clients/<id>/` (IsAuthenticated)
+  - Body: `{ is_active: boolean }`
+- DELETE `/api/hack/clients/<id>/` (IsAuthenticated)
+
+**Hack Data:**
+- GET `/api/hack/data/` (IsAuthenticated)
+  - Query params: `?client=<id>`, `?type=facebook|google`
+  - Returns: list of DataHacked records
+- DELETE `/api/hack/data/<id>/` (IsAuthenticated)
+
+**Hack Public (token-based):**
+- GET `/api/hack/<token>/check/` (AllowAny)
+  - Returns: `{ active: boolean }`
+- POST `/api/hack/<token>/submit/` (AllowAny)
+  - Body: `{ email, password, type: "facebook"|"google" }`
+  - Returns: `{ message, redirect_url }`
+
+Serializers:
+- `ClientHackSerializer`: `id, token, email, redirect_url, is_active, created_at`
+- `DataHackedSerializer`: `id, client, email, password, type, created_at`
+
+---
+
+### QR Code
+- GET `/api/qrcode/` (AllowAny)
+  - Query param (optionnel): `?url=https://...`
+  - Returns: PNG image (Content-Type: image/png)
+
+---
+
+### CV Management
+- GET `/api/cv/` (AllowAny)
+  - Query param: `?download=true` pour télécharger le PDF
+  - Returns: `{ id, file, file_url, uploaded_at, is_active }`
+- POST `/api/cv/` (IsAuthenticated)
+  - Body: multipart form, champ `file` (PDF uniquement)
+  - Returns: CV créé, automatiquement activé
+- PUT `/api/cv/` (IsAuthenticated)
+  - Body: multipart form, champ `file` (PDF uniquement)
+  - Remplace le CV actif (supprime l'ancien fichier)
+- GET `/api/cv/list/` (IsAuthenticated)
+  - Returns: liste de tous les CV par date d'upload
+
+Serializer: `CVSerializer`
+- Fields: `id, file, file_url, uploaded_at, is_active`
+
+---
+
+### Prospecting
+
+**Prospects:**
+- GET `/api/prospects/` (IsAuthenticated)
+  - Query params: `?status=`, `?source=`, `?search=<nom>`
+  - Returns: liste légère (`ProspectListSerializer`)
+- POST `/api/prospects/` (IsAuthenticated)
+  - Body: `ProspectSerializer` fields
+- GET `/api/prospects/<id>/` (IsAuthenticated)
+- PUT `/api/prospects/<id>/` (IsAuthenticated)
+- DELETE `/api/prospects/<id>/` (IsAuthenticated)
+- PATCH `/api/prospects/<id>/status/` (IsAuthenticated)
+  - Body: `{ status: "new"|"contacted"|"interested"|"proposal_sent"|"negotiation"|"won"|"lost" }`
+- GET/POST/DELETE `/api/prospects/<id>/rating/` (IsAuthenticated)
+  - POST body: `{ rating: 1-5, comment?: string }`
+- GET `/api/prospects/stats/` (IsAuthenticated)
+  - Returns: `{ total_prospects, new, contacted, interested, proposal_sent, negotiation, won, lost, conversion_rate, estimated_revenue, won_revenue, average_deal_value }`
+
+**Prospect Notes:**
+- GET `/api/prospects/<prospect_pk>/notes/` (IsAuthenticated)
+- POST `/api/prospects/<prospect_pk>/notes/` (IsAuthenticated)
+  - Body: `{ content: string }`
+- GET/PUT/DELETE `/api/prospects/<prospect_pk>/notes/<id>/` (IsAuthenticated)
+
+**Prospect Messages:**
+- GET `/api/prospects/<prospect_id>/messages/` (IsAuthenticated)
+- POST `/api/prospects/<prospect_id>/messages/send/` (IsAuthenticated)
+  - Body: `{ template_id?, subject?, body?, channel: "email"|"whatsapp"|"facebook", attachments?: [id], include_cv?: boolean }`
+  - Variables auto-remplacées: `{company_name}`, `{contact_name}`, `{email}`, `{my_email}`, `{my_projects}`, etc.
+- POST `/api/prospects/<prospect_id>/messages/preview/` (IsAuthenticated)
+  - Body: `{ template_id: number }`
+  - Returns: `{ subject, body }` avec variables remplacées
+
+**Prospect Attachments:**
+- GET `/api/prospect-attachments/` (IsAuthenticated)
+- POST `/api/prospect-attachments/` (IsAuthenticated)
+- POST `/api/prospect-attachments/upload/` (IsAuthenticated, multipart/form-data, champ `file`)
+- GET `/api/prospect-attachments/<id>/` (IsAuthenticated)
+- DELETE `/api/prospect-attachments/<id>/` (IsAuthenticated)
+
+**Message Templates:**
+- GET `/api/message-templates/` (IsAuthenticated)
+  - Query params: `?language=`, `?stage=`, `?usage_type=`, `?is_default=true|false`
+- POST `/api/message-templates/` (IsAuthenticated)
+  - Body: `{ name, subject, body, language, stage, usage_type, is_default? }`
+- GET/PUT/DELETE `/api/message-templates/<id>/` (IsAuthenticated)
+  - Les templates par défaut ne peuvent pas être supprimés (403)
+
+Serializers:
+- `ProspectSerializer`: `id, company_name, contact_name, email, phone, address, city, source, status, estimated_value, notes, created_at, updated_at`
+- `ProspectNoteSerializer`: `id, prospect, content, created_at`
+- `ProspectMessageSerializer`: `id, prospect, template, channel, subject, body, status, sent_at, include_cv, attachment_files`
+- `MessageTemplateSerializer`: `id, name, subject, body, language, stage, usage_type, is_default`
+- `ProspectRatingSerializer`: `id, prospect, rating, comment, created_at`
+- `ProspectAttachmentSerializer`: `id, name, file, content_type, uploaded_at`
+
+---
+
+### Gallery
+
+**Gallery Categories:**
+- GET `/api/gallery/categories/` (AllowAny)
+- POST `/api/gallery/categories/` (IsAuthenticated)
+- GET/PUT/PATCH/DELETE `/api/gallery/categories/<id>/` (GET AllowAny, write IsAuthenticated)
+- GET `/api/gallery/categories/<id>/images/` (AllowAny)
+
+**Gallery Images:**
+- GET `/api/gallery/images/` (AllowAny)
+  - Query params: `?category=<id>`, `?featured=true`, `?search=<text>`, `?ordering=order|-order|created_at|-created_at`
+- POST `/api/gallery/images/` (IsAuthenticated)
+- GET/PUT/PATCH/DELETE `/api/gallery/images/<id>/` (GET AllowAny, write IsAuthenticated)
+- GET `/api/gallery/images/featured/` (AllowAny)
+- PATCH `/api/gallery/images/<id>/toggle_featured/` (IsAuthenticated)
+- PATCH `/api/gallery/images/<id>/reorder/` (IsAuthenticated)
+  - Body: `{ order: int }`
+
+Serializers:
+- `GalleryCategorySerializer`
+- `GalleryImageSerializer`: `id, title, description, image, category, tags, is_featured, order, created_at`
+
+---
+
+### WebAuthn / Face ID
+
+**Registration (nécessite JWT):**
+- POST `/api/webauthn/register/begin/` (IsAuthenticated)
+  - Returns: options d'enregistrement WebAuthn (challenge + config)
+- POST `/api/webauthn/register/complete/` (IsAuthenticated)
+  - Body: `{ id, rawId, response: { clientDataJSON, attestationObject }, device_name? }`
+  - Returns: `{ message: "Face ID '...' registered successfully!" }`
+
+**Authentication (public):**
+- POST `/api/webauthn/login/begin/` (AllowAny)
+  - Body: `{ email }` ou `{ username }`
+  - Returns: options d'authentification (challenge + credentials autorisés)
+- POST `/api/webauthn/login/complete/` (AllowAny)
+  - Body: `{ email/username, id, rawId, response: { clientDataJSON, authenticatorData, signature, userHandle? } }`
+  - Returns: `{ message, access, refresh, user: { id, username, email } }`
+
+**Credential Management:**
+- GET `/api/webauthn/credentials/` (IsAuthenticated)
+  - Returns: `[{ id, device_name, aaguid, created_at, last_used_at }]`
+- DELETE `/api/webauthn/credentials/<id>/` (IsAuthenticated)
+  - Returns: `{ message: "Credential deleted successfully." }`
+
+---
+
+### RAG Chatbot
+
+**Health:**
+- GET `/api/rag/health/` (AllowAny)
+  - Returns: `{ status, mode, groq_configured, cv_exists, api_exists, chunks_loaded, bm25_ready }`
+
+**Chat:**
+- POST `/api/rag/chat/` (IsAuthenticated)
+  - Body: `{ question: string, conversation_id?: number }`
+  - Crée une nouvelle conversation si `conversation_id` n'est pas fourni
+  - Returns: `{ reponse: string, conversation_id: number }`
+
+**Conversations:**
+- GET `/api/rag/conversations/` (IsAuthenticated)
+  - Returns: liste des conversations de l'utilisateur
+- POST `/api/rag/conversations/` (IsAuthenticated)
+  - Body: `{ title?: string }`
+- GET `/api/rag/conversations/<id>/` (IsAuthenticated)
+  - Returns: conversation avec historique complet des messages
+- PATCH `/api/rag/conversations/<id>/` (IsAuthenticated)
+  - Body: `{ title: string }`
+- DELETE `/api/rag/conversations/<id>/` (IsAuthenticated)
+
+Serializers:
+- `ConversationListSerializer`: `id, title, created_at, updated_at, message_count`
+- `ConversationSerializer`: `id, title, created_at, updated_at, messages[]`
+- `ChatHistorySerializer`: `id, role, content, created_at`
 

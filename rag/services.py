@@ -147,14 +147,18 @@ class RAGService:
             except Exception as e:
                 print(f"Erreur chargement historique: {e}")
 
+        from .tools import TOOLS, executer_tool
+
         messages = [
             {
                 "role": "system",
                 "content": (
                     "Tu es l'assistant personnel de l'auteur de ce CV et de cette API. "
-                    "Réponds UNIQUEMENT à partir du contexte ci-dessous. "
-                    "Si l'information n'est pas dans le contexte, dis que tu ne sais pas.\n\n"
-                    f"Contexte:\n{contexte}"
+                    "Tu peux interroger la base de données pour récupérer les données réelles. "
+                    "Utilise les fonctions disponibles quand l'utilisateur demande des informations "
+                    "qui se trouvent dans la base de données (logins, projets, prospects, etc.). "
+                    "Réponds en français.\n\n"
+                    f"Contexte du CV/API:\n{contexte}"
                 ),
             },
             *historique,
@@ -164,5 +168,36 @@ class RAGService:
         completion = self.groq_client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=messages,
+            tools=TOOLS,
+            tool_choice="auto",
         )
-        return completion.choices[0].message.content
+
+        assistant_msg = completion.choices[0].message
+
+        if assistant_msg.tool_calls:
+            messages.append(assistant_msg.to_dict())
+
+            for tool_call in assistant_msg.tool_calls:
+                nom_func = tool_call.function.name
+                try:
+                    args = json.loads(tool_call.function.arguments)
+                except json.JSONDecodeError:
+                    args = {}
+
+                resultat = executer_tool(nom_func, args, user)
+
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps(resultat, ensure_ascii=False, default=str),
+                    }
+                )
+
+            completion2 = self.groq_client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=messages,
+            )
+            return completion2.choices[0].message.content
+
+        return assistant_msg.content
