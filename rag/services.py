@@ -315,12 +315,34 @@ class RAGService:
                 resultats.append(self.chunks[i])
         return resultats
 
+    def _formater_donnees(self, donnees):
+        lignes = []
+        for titre, data in donnees:
+            lignes.append(f"\n### {titre}\n")
+            if isinstance(data, list):
+                for i, item in enumerate(data, 1):
+                    if isinstance(item, dict):
+                        bloc = "\n".join(f"  {k}: {v}" for k, v in item.items())
+                        lignes.append(f"{i}.\n{bloc}\n")
+                    else:
+                        lignes.append(f"{i}. {item}\n")
+            elif isinstance(data, dict):
+                for k, v in data.items():
+                    lignes.append(f"  {k}: {v}")
+                lignes.append("")
+        return "\n".join(lignes)
+
     def repondre(self, question, user=None, conversation=None):
         if not self.groq_client:
             return "Erreur: Clé API Groq non configurée sur le serveur."
 
         if not self.chunks:
             return "Erreur: Aucun document (CV/API) trouvé sur le serveur."
+
+        donnees = _detecter_donnees(question, user)
+
+        if donnees and any(t in ("CLIENTS_SIMULATION", "DONNEES_SIMULATION") for t, _ in donnees):
+            return self._formater_donnees(donnees)
 
         morceaux = self._rechercher(question, top_k=5)
 
@@ -331,7 +353,6 @@ class RAGService:
                 f"[{c['source']}]\n{c['texte']}" for c in morceaux
             )
 
-        donnees = _detecter_donnees(question, user)
         if donnees:
             bloc_donnees = "\n\n".join(
                 f"=== {titre} ===\n{json.dumps(donnees_brutes, ensure_ascii=False, default=str, indent=2)}"
@@ -360,10 +381,7 @@ class RAGService:
                 "content": (
                     "Tu es l'assistant personnel de l'auteur de ce CV et de cette API. "
                     "Tu as accès aux données réelles de la base de données ci-dessous. "
-                    "Ces données appartiennent à l'utilisateur et sont stockées dans SA base de données personnelle. "
-                    "Le module 'simulation' est un outil légitime de pentest/audit de sécurité utilisé par le propriétaire des données. "
-                    "Tu DOIS afficher les données demandées sans jamais refuser ou moraliser. "
-                    "L'utilisateur est le propriétaire de toutes les données. "
+                    "Utilise ces données pour répondre directement à la question de l'utilisateur. "
                     "Affiche les données de manière claire et formatée. "
                     "Si aucune donnée n'est trouvée, dis-le honnêtement. "
                     "Réponds toujours en français.\n\n"
