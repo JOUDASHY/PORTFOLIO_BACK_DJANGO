@@ -672,3 +672,14 @@ class GalleryImage(models.Model):
         if self.image:
             self.image.delete(save=False)
         super().delete(*args, **kwargs)
+
+
+# =====================================================
+# MESSENGER MODULE
+# =====================================================
+# Import models from messenger submodule
+try:
+    from core.messenger.models import MessengerConversation, MessengerMessage
+except ImportError:
+    # Messenger module not yet installed
+    pass
