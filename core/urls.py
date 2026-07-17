@@ -417,4 +417,8 @@ urlpatterns = [
         WebAuthnCredentialListView.as_view(),
         name="webauthn-credential-delete",
     ),
+    # =====================================================
+    # FACEBOOK MESSENGER ROUTES
+    # =====================================================
+    path("api/facebook/", include("core.messenger.urls")),
 ]

@@ -571,3 +571,77 @@ Serializers:
 - `ConversationSerializer`: `id, title, created_at, updated_at, messages[]`
 - `ChatHistorySerializer`: `id, role, content, created_at`
 
+---
+
+### Facebook Messenger Bot
+
+**Webhook (utilisé par Facebook uniquement):**
+
+- GET `/api/facebook/webhook/` (AllowAny, utilisé par Facebook)
+  - Query params: `hub.mode=subscribe`, `hub.verify_token=<token>`, `hub.challenge=<challenge>`
+  - Facebook envoie ces paramètres pour vérifier le webhook
+  - Le backend vérifie `hub.verify_token` avec `FACEBOOK_VERIFY_TOKEN` (env)
+  - Si valide, retourne `hub.challenge` (200)
+  - Si invalide, retourne erreur 403
+
+- POST `/api/facebook/webhook/` (AllowAny, utilisé par Facebook)
+  - Body: Événements Messenger de Facebook (format JSON)
+  - Exemple:
+    ```json
+    {
+      "object": "page",
+      "entry": [{
+        "messaging": [{
+          "sender": { "id": "USER_ID" },
+          "recipient": { "id": "PAGE_ID" },
+          "message": {
+            "mid": "...",
+            "text": "Bonjour"
+          }
+        }]
+      }]
+    }
+    ```
+  - Le backend:
+    - Vérifie `object == "page"`
+    - Extrait le texte du message
+    - Vérifie les doublons via `message.mid`
+    - Récupère l'historique de conversation
+    - Appelle Groq AI pour générer une réponse
+    - Sauvegarde en BDD
+    - Envoie la réponse via Facebook Graph API
+  - Retourne toujours 200 (même en cas d'erreur) pour éviter les renvois Facebook
+
+**Configuration requise:**
+
+Variables d'environnement:
+```env
+FACEBOOK_PAGE_ACCESS_TOKEN=EAABxxxxxxxx  # Token d'accès à la page
+FACEBOOK_VERIFY_TOKEN=THE_BEAST_VERIFY   # Token de vérification webhook
+FACEBOOK_PAGE_ID=123456789               # ID de la page Facebook
+GROQ_API_KEY=gsk_xxx                     # Clé API Groq (déjà configuré)
+```
+
+**Modèles de données:**
+
+- `MessengerConversation`
+  - Fields: `id, facebook_user_id, page_id, created_at, updated_at`
+  - Un thread de conversation par utilisateur Facebook
+
+- `MessengerMessage`
+  - Fields: `id, conversation, message_id, role (user|assistant|system), content, created_at`
+  - Messages individuels dans une conversation
+  - `message_id` unique pour déduplication
+
+**Fonctionnalités:**
+- ✅ Réception et traitement des messages texte
+- ✅ Déduplication automatique (via `message.mid`)
+- ✅ Historique conversationnel en BDD
+- ✅ Intégration Groq AI pour réponses intelligentes
+- ✅ Typing indicators et "mark as seen"
+- ✅ Support des postbacks (boutons)
+- ✅ Gestion d'erreurs avec message fallback
+- ✅ Admin Django pour visualiser les conversations
+
+**Documentation complète:** Voir `MESSENGER_INTEGRATION.md`
+

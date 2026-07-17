@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "core",
+    "core.messenger",  # Facebook Messenger Integration
     "corsheaders",
     "rest_framework_simplejwt.token_blacklist",
     "channels",
@@ -210,3 +211,35 @@ if DEBUG:
 # --------------------------------------------------
 # RAG Configuration (Groq + CV/API en contexte, sans Chroma)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+# --------------------------------------------------
+# Facebook Messenger Configuration
+FACEBOOK_PAGE_ACCESS_TOKEN = os.getenv("FACEBOOK_PAGE_ACCESS_TOKEN")
+FACEBOOK_VERIFY_TOKEN = os.getenv("FACEBOOK_VERIFY_TOKEN")
+FACEBOOK_PAGE_ID = os.getenv("FACEBOOK_PAGE_ID")
+
+# --------------------------------------------------
+# Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'core.messenger': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
