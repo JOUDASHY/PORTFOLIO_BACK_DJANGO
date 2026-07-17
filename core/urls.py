@@ -420,5 +420,5 @@ urlpatterns = [
     # =====================================================
     # FACEBOOK MESSENGER ROUTES
     # =====================================================
-    path("api/facebook/", include("core.messenger.urls")),
+    path("facebook/", include("core.messenger.urls")),
 ]
