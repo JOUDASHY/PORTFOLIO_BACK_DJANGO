@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0040_update_premier_contact_template'),
+        ('core', '0048_clienthack_is_active'),
     ]
 
     operations = [
