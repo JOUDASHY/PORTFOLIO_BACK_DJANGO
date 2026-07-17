@@ -20,13 +20,16 @@ class GroqAIService:
     FALLBACK_MESSAGE = "Désolé, notre assistant est temporairement indisponible. Veuillez réessayer dans quelques instants."
     
     def __init__(self):
+        logger.info("🔧 GroqAIService.__init__() called")
         api_key = os.environ.get("GROQ_API_KEY")
         if not api_key:
-            logger.error("GROQ_API_KEY environment variable is not set")
+            logger.error("❌ GROQ_API_KEY environment variable is not set")
             raise ValueError("GROQ_API_KEY environment variable is not set")
         
+        logger.info(f"✅ GROQ_API_KEY found: {api_key[:10]}...")
         self.client = Groq(api_key=api_key)
         self.model = os.environ.get("GROQ_MODEL", self.DEFAULT_MODEL)
+        logger.info(f"✅ Using Groq model: {self.model}")
     
     def get_system_prompt(self) -> str:
         """
@@ -54,28 +57,49 @@ Réponds de manière concise et claire. Si tu ne sais pas quelque chose, dis-le 
         Returns:
             str: AI response text
         """
+        logger.info("=" * 80)
+        logger.info("🤖 GroqAIService.chat() called")
+        logger.info("=" * 80)
+        
         try:
             # Add system prompt if not already present
             if not messages or messages[0].get("role") != "system":
+                system_prompt = self.get_system_prompt()
                 messages.insert(0, {
                     "role": "system",
-                    "content": self.get_system_prompt()
+                    "content": system_prompt
                 })
+                logger.info(f"✅ System prompt added (length: {len(system_prompt)})")
+            
+            logger.info(f"📤 Calling Groq API with {len(messages)} messages")
+            logger.info(f"Model: {self.model}")
+            logger.info(f"Max tokens: {max_tokens}")
             
             # Call Groq API
+            logger.info("⏳ Sending request to Groq...")
             completion = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
                 max_tokens=max_tokens,
                 temperature=0.7,
             )
+            logger.info("✅ Response received from Groq")
             
             response_text = completion.choices[0].message.content
-            logger.info(f"Groq API response generated successfully")
+            logger.info(f"📥 Groq response length: {len(response_text)} characters")
+            logger.info(f"📥 Groq response preview: {response_text[:200]}...")
+            logger.info("=" * 80)
+            
             return response_text
             
         except Exception as e:
-            logger.error(f"Groq API error: {str(e)}")
+            logger.error("=" * 80)
+            logger.error("❌ GROQ API ERROR")
+            logger.error("=" * 80)
+            logger.error(f"Error type: {type(e).__name__}")
+            logger.error(f"Error message: {str(e)}", exc_info=True)
+            logger.info(f"🔄 Returning fallback message")
+            logger.error("=" * 80)
             return self.FALLBACK_MESSAGE
     
     def prepare_conversation_history(
