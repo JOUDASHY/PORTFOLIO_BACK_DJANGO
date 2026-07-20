@@ -150,11 +150,11 @@ class MessengerEventHandler:
             history = self._get_conversation_history(conversation)
             logger.info(f"History length: {len(history)} messages")
             
-            # Get AI response
-            logger.info("🤖 Calling Groq AI...")
-            logger.info(f"Sending to Groq: {json.dumps(history, indent=2)}")
-            ai_response = self.ai_service.chat(history)
-            logger.info(f"🤖 Groq response received: {ai_response[:100]}...")
+            # Get AI response using RAG Service
+            logger.info("🤖 Calling RAG AI Service...")
+            logger.info(f"Sending to RAG: {json.dumps(history, indent=2)}")
+            ai_response = self.ai_service.get_response(history, user=None)  # user=None pour Messenger (pas de User Django)
+            logger.info(f"🤖 RAG response received: {ai_response[:100]}...")
             
             # Save AI response
             ai_message_id = f"ai_{message_id}"
