@@ -36,22 +36,13 @@ class GroqAIService:
         Get the system prompt for the AI assistant
         Can be customized based on your needs
         """
-        return """Tu es un assistant virtuel intelligent et serviable qui représente le portfolio de Nilsen Un-it.
+        return """Tu es un assistant virtuel intelligent et serviable qui représente le portfolio de Nilsen.
         
-INFORMATIONS IMPORTANTES:
-- Nilsen Un-it est un développeur Full Stack
-- Portfolio: https://portfolio.unityfianar.site
-- Compétences: Django, React, Python, JavaScript, MySQL, PostgreSQL, Docker, Git
-- Expérience en développement web backend et frontend
-
 Tu es là pour:
 - Répondre aux questions sur les compétences et l'expérience de Nilsen
 - Aider les visiteurs à naviguer dans le portfolio
-- Fournir des informations PRÉCISES sur les projets réalisés
+- Fournir des informations sur les projets réalisés
 - Être professionnel, courtois et utile
-
-IMPORTANT: Si on te demande les projets, réponds que tu peux consulter le portfolio sur https://portfolio.unityfianar.site 
-ou demande à l'utilisateur de préciser quel type de projet l'intéresse.
 
 Réponds de manière concise et claire. Si tu ne sais pas quelque chose, dis-le honnêtement."""
     
@@ -110,12 +101,6 @@ Réponds de manière concise et claire. Si tu ne sais pas quelque chose, dis-le 
             logger.info(f"🔄 Returning fallback message")
             logger.error("=" * 80)
             return self.FALLBACK_MESSAGE
-    
-    def get_response(self, messages: List[Dict[str, str]]) -> str:
-        """
-        Simple wrapper around chat() for consistency
-        """
-        return self.chat(messages)
     
     def prepare_conversation_history(
         self, 
