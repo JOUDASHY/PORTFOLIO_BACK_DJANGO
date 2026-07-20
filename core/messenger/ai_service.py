@@ -1,103 +1,98 @@
 """
-AI Service using Groq
-Handles conversation with the AI model
+AI Service using RAG (Retrieval-Augmented Generation)
+Uses the existing RAGService from the rag app for better responses
 """
 import logging
-import os
 from typing import List, Dict
 
-from groq import Groq
-
 logger = logging.getLogger(__name__)
+
+# Import the existing RAG service
+_rag_service = None
+
+
+def get_rag_service():
+    """Get or create RAG service instance"""
+    global _rag_service
+    if _rag_service is None:
+        from rag.services import RAGService
+        logger.info("🔧 Initializing RAGService for Messenger...")
+        _rag_service = RAGService()
+        logger.info("✅ RAGService initialized")
+    return _rag_service
 
 
 class GroqAIService:
     """
-    Service for interacting with Groq AI API
+    Service for interacting with AI using RAG
+    Wraps the existing RAGService for Messenger compatibility
     """
     
-    DEFAULT_MODEL = "llama-3.3-70b-versatile"
     FALLBACK_MESSAGE = "Désolé, notre assistant est temporairement indisponible. Veuillez réessayer dans quelques instants."
     
     def __init__(self):
         logger.info("🔧 GroqAIService.__init__() called")
-        api_key = os.environ.get("GROQ_API_KEY")
-        if not api_key:
-            logger.error("❌ GROQ_API_KEY environment variable is not set")
-            raise ValueError("GROQ_API_KEY environment variable is not set")
-        
-        logger.info(f"✅ GROQ_API_KEY found: {api_key[:10]}...")
-        self.client = Groq(api_key=api_key)
-        self.model = os.environ.get("GROQ_MODEL", self.DEFAULT_MODEL)
-        logger.info(f"✅ Using Groq model: {self.model}")
+        # Initialize RAG service
+        self.rag_service = get_rag_service()
+        logger.info(f"✅ RAG service ready with {len(self.rag_service.chunks)} chunks")
     
-    def get_system_prompt(self) -> str:
+    def get_response(self, messages: List[Dict[str, str]], user=None) -> str:
         """
-        Get the system prompt for the AI assistant
-        Can be customized based on your needs
-        """
-        return """Tu es un assistant virtuel intelligent et serviable qui représente le portfolio de Nilsen.
-        
-Tu es là pour:
-- Répondre aux questions sur les compétences et l'expérience de Nilsen
-- Aider les visiteurs à naviguer dans le portfolio
-- Fournir des informations sur les projets réalisés
-- Être professionnel, courtois et utile
-
-Réponds de manière concise et claire. Si tu ne sais pas quelque chose, dis-le honnêtement."""
-    
-    def chat(self, messages: List[Dict[str, str]], max_tokens: int = 500) -> str:
-        """
-        Send a chat request to Groq API
+        Get AI response using RAG service
         
         Args:
             messages: List of message dictionaries with 'role' and 'content'
-            max_tokens: Maximum tokens in response
+            user: Optional Django user object for personalized responses
             
         Returns:
             str: AI response text
         """
         logger.info("=" * 80)
-        logger.info("🤖 GroqAIService.chat() called")
+        logger.info("🤖 GroqAIService.get_response() called")
         logger.info("=" * 80)
         
         try:
-            # Add system prompt if not already present
-            if not messages or messages[0].get("role") != "system":
-                system_prompt = self.get_system_prompt()
-                messages.insert(0, {
-                    "role": "system",
-                    "content": system_prompt
-                })
-                logger.info(f"✅ System prompt added (length: {len(system_prompt)})")
+            # Get the last user message
+            user_message = None
+            for msg in reversed(messages):
+                if msg.get("role") == "user":
+                    user_message = msg.get("content")
+                    break
             
-            logger.info(f"📤 Calling Groq API with {len(messages)} messages")
-            logger.info(f"Model: {self.model}")
-            logger.info(f"Max tokens: {max_tokens}")
+            if not user_message:
+                logger.warning("⚠️ No user message found")
+                return "Désolé, je n'ai pas compris votre message."
             
-            # Call Groq API
-            logger.info("⏳ Sending request to Groq...")
-            completion = self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                max_tokens=max_tokens,
-                temperature=0.7,
+            logger.info(f"📤 User question: {user_message[:100]}...")
+            logger.info(f"👤 User: {user if user else 'Anonymous'}")
+            
+            # Use RAG service to get response with full context
+            logger.info("⏳ Calling RAGService.repondre()...")
+            response = self.rag_service.repondre(
+                question=user_message,
+                user=user,
+                conversation=None  # Messenger handles its own conversation history
             )
-            logger.info("✅ Response received from Groq")
             
-            response_text = completion.choices[0].message.content
-            logger.info(f"📥 Groq response length: {len(response_text)} characters")
-            logger.info(f"📥 Groq response preview: {response_text[:200]}...")
+            logger.info(f"✅ RAG response received ({len(response)} characters)")
+            logger.info(f"📥 Response preview: {response[:200]}...")
             logger.info("=" * 80)
             
-            return response_text
+            return response
             
         except Exception as e:
             logger.error("=" * 80)
-            logger.error("❌ GROQ API ERROR")
+            logger.error("❌ RAG SERVICE ERROR")
             logger.error("=" * 80)
             logger.error(f"Error type: {type(e).__name__}")
             logger.error(f"Error message: {str(e)}", exc_info=True)
+            logger.error("=" * 80)
+            return self.FALLBACK_MESSAGE
+    
+    # Deprecated method - kept for backward compatibility
+    def chat(self, messages: List[Dict[str, str]], max_tokens: int = 500) -> str:
+        """Legacy method - redirects to get_response()"""
+        return self.get_response(messages)
             logger.info(f"🔄 Returning fallback message")
             logger.error("=" * 80)
             return self.FALLBACK_MESSAGE
