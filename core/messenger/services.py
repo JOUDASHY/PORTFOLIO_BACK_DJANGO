@@ -19,6 +19,7 @@ class FacebookGraphAPI:
     
     GRAPH_API_VERSION = "v23.0"
     BASE_URL = f"https://graph.facebook.com/{GRAPH_API_VERSION}"
+    MAX_MESSAGE_LENGTH = 2000  # Facebook Messenger limit
     
     def __init__(self):
         logger.info("🔧 FacebookGraphAPI.__init__() called")
@@ -28,9 +29,100 @@ class FacebookGraphAPI:
             raise ValueError("FACEBOOK_PAGE_ACCESS_TOKEN environment variable is not set")
         logger.info(f"✅ FACEBOOK_PAGE_ACCESS_TOKEN found: {self.page_access_token[:15]}...")
     
-    def send_text_message(self, recipient_id: str, text: str) -> dict:
+    def _split_message(self, text: str) -> list[str]:
         """
-        Send a text message to a Facebook Messenger user
+        Split a long message into chunks that respect Facebook's 2000 char limit.
+        Tries to split at sentence boundaries for readability.
+        
+        Args:
+            text: The message to split
+            
+        Returns:
+            list[str]: List of message chunks
+        """
+        if len(text) <= self.MAX_MESSAGE_LENGTH:
+            return [text]
+        
+        chunks = []
+        current_chunk = ""
+        
+        # Split by paragraphs first
+        paragraphs = text.split('\n\n')
+        
+        for paragraph in paragraphs:
+            # If adding this paragraph would exceed limit, save current chunk
+            if len(current_chunk) + len(paragraph) + 2 > self.MAX_MESSAGE_LENGTH:
+                if current_chunk:
+                    chunks.append(current_chunk.strip())
+                    current_chunk = ""
+                
+                # If single paragraph is too long, split by sentences
+                if len(paragraph) > self.MAX_MESSAGE_LENGTH:
+                    sentences = paragraph.replace('. ', '.|').replace('.\n', '.|').split('|')
+                    for sentence in sentences:
+                        if len(current_chunk) + len(sentence) + 1 > self.MAX_MESSAGE_LENGTH:
+                            if current_chunk:
+                                chunks.append(current_chunk.strip())
+                            current_chunk = sentence
+                        else:
+                            current_chunk += " " + sentence if current_chunk else sentence
+                else:
+                    current_chunk = paragraph
+            else:
+                current_chunk += "\n\n" + paragraph if current_chunk else paragraph
+        
+        # Add remaining text
+        if current_chunk:
+            chunks.append(current_chunk.strip())
+        
+        logger.info(f"📝 Split message into {len(chunks)} chunks")
+        return chunks
+    
+    def send_text_message(self, recipient_id: str, text: str, auto_split: bool = True) -> dict:
+        """
+        Send a text message to a Facebook Messenger user.
+        Automatically splits messages longer than 2000 characters.
+        
+        Args:
+            recipient_id: Facebook PSID of the recipient
+            text: Message text to send
+            auto_split: If True, automatically split long messages into chunks
+            
+        Returns:
+            dict: API response (from last message if split)
+            
+        Raises:
+            requests.HTTPError: If the API request fails
+        """
+        logger.info("=" * 80)
+        logger.info("📤 send_text_message() called")
+        logger.info("=" * 80)
+        logger.info(f"Recipient ID: {recipient_id}")
+        logger.info(f"Message length: {len(text)} chars")
+        logger.info(f"Message text: {text[:100]}...")
+        
+        # Check if message needs to be split
+        if auto_split and len(text) > self.MAX_MESSAGE_LENGTH:
+            logger.warning(f"⚠️ Message exceeds {self.MAX_MESSAGE_LENGTH} chars, splitting...")
+            chunks = self._split_message(text)
+            
+            last_response = None
+            for i, chunk in enumerate(chunks, 1):
+                logger.info(f"📨 Sending chunk {i}/{len(chunks)} ({len(chunk)} chars)")
+                last_response = self._send_single_message(recipient_id, chunk)
+                
+                # Small delay between messages to maintain order
+                if i < len(chunks):
+                    import time
+                    time.sleep(0.5)
+            
+            return last_response
+        else:
+            return self._send_single_message(recipient_id, text)
+    
+    def _send_single_message(self, recipient_id: str, text: str) -> dict:
+        """
+        Internal method to send a single message without splitting.
         
         Args:
             recipient_id: Facebook PSID of the recipient
@@ -42,12 +134,6 @@ class FacebookGraphAPI:
         Raises:
             requests.HTTPError: If the API request fails
         """
-        logger.info("=" * 80)
-        logger.info("📤 send_text_message() called")
-        logger.info("=" * 80)
-        logger.info(f"Recipient ID: {recipient_id}")
-        logger.info(f"Message text: {text[:100]}...")
-        
         url = f"{self.BASE_URL}/me/messages"
         headers = {
             "Authorization": f"Bearer {self.page_access_token}",
@@ -59,7 +145,7 @@ class FacebookGraphAPI:
         }
         
         logger.info(f"API URL: {url}")
-        logger.info(f"Payload: {json.dumps(payload, indent=2)}")
+        logger.info(f"Payload: {json.dumps(payload, ensure_ascii=False)[:200]}...")
         
         try:
             logger.info("⏳ Sending POST request to Facebook Graph API...")
