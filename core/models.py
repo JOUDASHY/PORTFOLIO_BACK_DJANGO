@@ -170,13 +170,41 @@ class EmailResponse(models.Model):
 
 
 class Award(models.Model):
-    titre = models.CharField(max_length=255)
-    institution = models.CharField(max_length=255)
-    type = models.CharField(max_length=255)
-    annee = models.IntegerField()
+    """Diplômes et certifications obtenus lors d'un parcours éducatif"""
+    
+    TYPE_CHOICES = [
+        ('diplome', 'Diplôme'),
+        ('certification', 'Certification'),
+        ('attestation', 'Attestation'),
+        ('brevet', 'Brevet'),
+        ('autre', 'Autre'),
+    ]
+    
+    education = models.ForeignKey(
+        Education,
+        on_delete=models.CASCADE,
+        related_name='diplomes',
+        null=True,
+        blank=True,
+        help_text="Parcours éducatif qui a délivré ce diplôme/certification"
+    )
+    titre = models.CharField(max_length=255, help_text="Ex: Master 2 Informatique, AWS Certified")
+    institution = models.CharField(max_length=255, help_text="Organisme délivrant le diplôme")
+    type = models.CharField(
+        max_length=50,
+        choices=TYPE_CHOICES,
+        default='diplome',
+        help_text="Type de document obtenu"
+    )
+    annee = models.IntegerField(help_text="Année d'obtention")
 
     def __str__(self):
-        return self.titre
+        return f"{self.titre} ({self.annee})"
+    
+    class Meta:
+        verbose_name = "Diplôme/Certification"
+        verbose_name_plural = "Diplômes/Certifications"
+        ordering = ['-annee']
 
 
 class HistoricMail(models.Model):

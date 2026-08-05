@@ -118,9 +118,18 @@ class FormationSerializer(serializers.ModelSerializer):
 
 
 class AwardSerializer(serializers.ModelSerializer):
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    education_name = serializers.SerializerMethodField()
+    
     class Meta:
         model = Award
-        fields = "__all__"
+        fields = ["id", "education", "education_name", "titre", "institution", "type", "type_display", "annee"]
+    
+    def get_education_name(self, obj):
+        """Retourne le nom du parcours éducatif si lié"""
+        if obj.education:
+            return f"{obj.education.nom_ecole} - {obj.education.nom_parcours}"
+        return None
 
 
 class CompetenceSerializer(_AbsoluteMediaUrlMixin, serializers.ModelSerializer):
@@ -292,9 +301,11 @@ class UserDetailSerializer(ModelSerializer):
 
 
 class EducationSerializer(_AbsoluteMediaUrlMixin, serializers.ModelSerializer):
+    diplomes = AwardSerializer(many=True, read_only=True)
+    
     class Meta:
         model = Education
-        fields = "__all__"  # Inclut tous les champs du modèle
+        fields = ["id", "image", "nom_ecole", "nom_parcours", "annee_debut", "annee_fin", "lieu", "diplomes"]
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

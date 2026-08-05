@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from .models import (
+    Award,
     GalleryCategory,
     GalleryImage,
     MessageTemplate,
@@ -120,6 +121,34 @@ class WebAuthnCredentialAdmin(admin.ModelAdmin):
             "Dates",
             {
                 "fields": ("created_at", "last_used_at"),
+            },
+        ),
+    )
+
+
+# =====================================================
+# AWARD (DIPLOMES/CERTIFICATIONS) ADMIN
+# =====================================================
+
+
+@admin.register(Award)
+class AwardAdmin(admin.ModelAdmin):
+    list_display = ["titre", "education", "type", "institution", "annee"]
+    list_filter = ["type", "annee"]
+    search_fields = ["titre", "institution", "education__nom_ecole"]
+    autocomplete_fields = ["education"]
+    fieldsets = (
+        (
+            "Informations du diplôme",
+            {
+                "fields": ("titre", "type", "institution", "annee"),
+            },
+        ),
+        (
+            "Parcours éducatif lié",
+            {
+                "fields": ("education",),
+                "description": "Parcours éducatif ayant délivré ce diplôme/certification (optionnel)",
             },
         ),
     )

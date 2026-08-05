@@ -24,7 +24,8 @@ class GroqAIService:
         logger.info("✅ RAG Service initialized with CV, API docs, and database access")
     
     def get_response(self, messages: List[Dict[str, str]], user=None) -> str:
-        """
+        """institution = models.CharField(max_length=255)  # Organisme qui a décerné le prix
+            type = models.CharField(max_length=255)         
         Get response using RAG Service
         
         Args:
