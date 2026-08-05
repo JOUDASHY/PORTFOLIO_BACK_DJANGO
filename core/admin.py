@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .models import (
     Award,
+    Education,
     GalleryCategory,
     GalleryImage,
     MessageTemplate,
@@ -127,6 +128,24 @@ class WebAuthnCredentialAdmin(admin.ModelAdmin):
 
 
 # =====================================================
+# EDUCATION ADMIN
+# =====================================================
+
+
+@admin.register(Education)
+class EducationAdmin(admin.ModelAdmin):
+    list_display = ["nom_ecole", "nom_parcours", "annee_debut", "annee_fin", "lieu", "diplomes_count"]
+    list_filter = ["annee_debut", "annee_fin"]
+    search_fields = ["nom_ecole", "nom_parcours", "lieu"]
+    
+    def diplomes_count(self, obj):
+        """Affiche le nombre de diplômes liés"""
+        return obj.diplomes.count()
+    
+    diplomes_count.short_description = "Nb diplômes"
+
+
+# =====================================================
 # AWARD (DIPLOMES/CERTIFICATIONS) ADMIN
 # =====================================================
 
@@ -136,7 +155,7 @@ class AwardAdmin(admin.ModelAdmin):
     list_display = ["titre", "education", "type", "institution", "annee"]
     list_filter = ["type", "annee"]
     search_fields = ["titre", "institution", "education__nom_ecole"]
-    autocomplete_fields = ["education"]
+    # autocomplete_fields = ["education"]  # Commenté temporairement
     fieldsets = (
         (
             "Informations du diplôme",
