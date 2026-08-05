@@ -189,7 +189,12 @@ class Award(models.Model):
         help_text="Parcours éducatif qui a délivré ce diplôme/certification"
     )
     titre = models.CharField(max_length=255, help_text="Ex: Master 2 Informatique, AWS Certified")
-    institution = models.CharField(max_length=255, help_text="Organisme délivrant le diplôme")
+    institution = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text="Organisme délivrant le diplôme (utilise l'école de l'éducation si non spécifié)"
+    )
     type = models.CharField(
         max_length=50,
         choices=TYPE_CHOICES,
@@ -200,6 +205,15 @@ class Award(models.Model):
 
     def __str__(self):
         return f"{self.titre} ({self.annee})"
+    
+    @property
+    def institution_name(self):
+        """Retourne l'institution du Award ou de l'Education liée"""
+        if self.institution:
+            return self.institution
+        if self.education:
+            return self.education.nom_ecole
+        return "Non spécifié"
     
     class Meta:
         verbose_name = "Diplôme/Certification"

@@ -120,10 +120,11 @@ class FormationSerializer(serializers.ModelSerializer):
 class AwardSerializer(serializers.ModelSerializer):
     type_display = serializers.CharField(source='get_type_display', read_only=True)
     education_name = serializers.SerializerMethodField()
+    institution_name = serializers.CharField(read_only=True)  # Utilise la propriété du modèle
     
     class Meta:
         model = Award
-        fields = ["id", "education", "education_name", "titre", "institution", "type", "type_display", "annee"]
+        fields = ["id", "education", "education_name", "titre", "institution", "institution_name", "type", "type_display", "annee"]
     
     def get_education_name(self, obj):
         """Retourne le nom du parcours éducatif si lié"""

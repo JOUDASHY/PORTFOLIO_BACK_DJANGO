@@ -57,7 +57,9 @@ class Migration(migrations.Migration):
             model_name='award',
             name='institution',
             field=models.CharField(
-                help_text='Organisme délivrant le diplôme',
+                blank=True,
+                null=True,
+                help_text='Organisme délivrant le diplôme (utilise l\'école de l\'éducation si non spécifié)',
                 max_length=255
             ),
         ),
