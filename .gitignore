@@ -11,3 +11,5 @@ media/
 monenv/
 
 env/
+*.log
+messenger_debug.log
