@@ -10,8 +10,9 @@ print(f"Key loaded: {bool(api_key)}")
 try:
     client = Groq(api_key=api_key)
     print("Client initialized. Sending request...")
+    model_name = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
     completion = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model=model_name,
         messages=[
             {"role": "user", "content": "Bonjour, ceci est un test. Réponds par 'OK' si tu me reçois."}
         ]

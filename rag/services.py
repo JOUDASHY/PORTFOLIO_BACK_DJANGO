@@ -2,10 +2,22 @@ import json
 import os
 import re
 
-import pdfplumber
+try:
+    import pdfplumber
+except ImportError:
+    pdfplumber = None
+
+try:
+    from pypdf import PdfReader
+except ImportError:
+    PdfReader = None
+
 from django.conf import settings
 from groq import Groq
-from rank_bm25 import BM25Okapi
+try:
+    from rank_bm25 import BM25Okapi
+except ImportError:
+    BM25Okapi = None
 
 
 def _tokeniser(text):
@@ -271,11 +283,20 @@ class RAGService:
     def _extraire_cv(self, chemin_pdf):
         texte = ""
         try:
-            with pdfplumber.open(chemin_pdf) as pdf:
-                for page in pdf.pages:
+            if pdfplumber:
+                with pdfplumber.open(chemin_pdf) as pdf:
+                    for page in pdf.pages:
+                        page_text = page.extract_text()
+                        if page_text:
+                            texte += page_text + "\n"
+            elif PdfReader:
+                reader = PdfReader(chemin_pdf)
+                for page in reader.pages:
                     page_text = page.extract_text()
                     if page_text:
                         texte += page_text + "\n"
+            else:
+                print("Aucune librairie PDF (pdfplumber ou pypdf) disponible.")
         except Exception as e:
             print(f"Erreur extraction CV: {e}")
         return texte
@@ -299,21 +320,37 @@ class RAGService:
     def _indexer(self):
         if not self.chunks:
             return None
-        corpus_tokenise = [_tokeniser(c["texte"]) for c in self.chunks]
-        return BM25Okapi(corpus_tokenise)
+        if BM25Okapi:
+            corpus_tokenise = [_tokeniser(c["texte"]) for c in self.chunks]
+            return BM25Okapi(corpus_tokenise)
+        return True
 
     def _rechercher(self, question, top_k=5):
         if not self.bm25 or not self.chunks:
             return []
-        tokens_question = _tokeniser(question)
-        scores = self.bm25.get_scores(tokens_question)
-        indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
-        max_k = min(top_k, len(self.chunks))
-        resultats = []
-        for i in indices[:max_k]:
-            if scores[i] > 0:
-                resultats.append(self.chunks[i])
-        return resultats
+        tokens_question = set(_tokeniser(question))
+        if not tokens_question:
+            return self.chunks[:top_k]
+
+        if BM25Okapi and isinstance(self.bm25, BM25Okapi):
+            scores = self.bm25.get_scores(list(tokens_question))
+            indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
+            max_k = min(top_k, len(self.chunks))
+            resultats = []
+            for i in indices[:max_k]:
+                if scores[i] > 0:
+                    resultats.append(self.chunks[i])
+            return resultats
+        else:
+            # Fallback scoring basé sur le chevauchement de mots
+            scored = []
+            for chunk in self.chunks:
+                chunk_tokens = set(_tokeniser(chunk["texte"]))
+                score = len(tokens_question.intersection(chunk_tokens))
+                if score > 0:
+                    scored.append((score, chunk))
+            scored.sort(key=lambda x: x[0], reverse=True)
+            return [chunk for _, chunk in scored[:top_k]]
 
     def _formater_donnees(self, donnees):
         lignes = []
@@ -392,8 +429,36 @@ class RAGService:
             {"role": "user", "content": question},
         ]
 
-        completion = self.groq_client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=messages,
+        selected_model = (
+            getattr(settings, "GROQ_MODEL", None)
+            or os.getenv("GROQ_MODEL")
+            or "openai/gpt-oss-120b"
         )
-        return completion.choices[0].message.content
+
+        candidate_models = [
+            selected_model,
+            "openai/gpt-oss-120b",
+            "qwen/qwen3.8-27b",
+            "openai/gpt-oss-20b",
+            "groq/compound",
+        ]
+        # Dédupliquer tout en préservant l'ordre
+        candidate_models = list(dict.fromkeys(candidate_models))
+
+        last_error = None
+        for model_name in candidate_models:
+            try:
+                completion = self.groq_client.chat.completions.create(
+                    model=model_name,
+                    messages=messages,
+                )
+                return completion.choices[0].message.content
+            except Exception as err:
+                last_error = err
+                err_msg = str(err)
+                if "model_not_found" in err_msg or "model_decommissioned" in err_msg or "404" in err_msg:
+                    continue
+                raise err
+
+        if last_error:
+            raise last_error
