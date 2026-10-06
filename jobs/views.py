@@ -43,6 +43,8 @@ class JobOfferViewSet(viewsets.ModelViewSet):
             qs = qs.filter(source=params["source"])
         if params.get("remote") in ("true", "1"):
             qs = qs.filter(is_remote=True)
+        if params.get("prospect"):
+            qs = qs.filter(prospect__id=params["prospect"])
         search = params.get("search")
         if search:
             qs = qs.filter(
@@ -51,6 +53,19 @@ class JobOfferViewSet(viewsets.ModelViewSet):
                 | Q(location__icontains=search)
             )
         return qs
+
+    @staticmethod
+    def _build_company_name(offer) -> str:
+        """Nom lisible du prospect : 'Entreprise (Intitulé du poste)'."""
+        company = (offer.company or "").strip()
+        title = (offer.title or "").strip()
+        if company and title:
+            label = f"{company} ({title})"
+        elif company:
+            label = company
+        else:
+            label = title or "Entreprise inconnue"
+        return label[:255]
 
     @action(detail=True, methods=["post"], url_path="to-prospect")
     def to_prospect(self, request, pk=None):
@@ -62,7 +77,7 @@ class JobOfferViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_200_OK,
             )
         prospect = Prospect.objects.create(
-            company_name=offer.company or offer.title[:255],
+            company_name=self._build_company_name(offer),
             website_url=offer.url[:200] if offer.url else "",
             source="other",
             notes=f"Offre importée ({offer.get_source_display()})\n"
