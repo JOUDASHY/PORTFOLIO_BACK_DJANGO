@@ -4,8 +4,21 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.core.mail import send_mail, EmailMessage
 from django.template.loader import get_template
-from weasyprint import HTML
 from django.conf import settings
+
+
+def _get_weasyprint_html():
+    """Import paresseux de WeasyPrint : évite de casser le chargement du module
+    (et donc tout le routing) quand la lib n'est pas installée. L'erreur ne
+    survient qu'au moment réel d'une génération de PDF."""
+    try:
+        from weasyprint import HTML
+    except ImportError as exc:  # pragma: no cover
+        raise RuntimeError(
+            "WeasyPrint n'est pas installé — génération de PDF indisponible. "
+            "Installez-le (pip install weasyprint) pour les lettres de motivation."
+        ) from exc
+    return HTML
 
 from core.models import Email, EmailResponse, HistoricMail
 from core.serializers import EmailSerializer, EmailResponseSerializer, HistoricMailSerializer
@@ -128,6 +141,7 @@ Je me permets de vous contacter afin de postuler pour un stage au sein de votre 
     
     def generate_pdf_from_html(self, html_content):
         """Generate PDF from dynamic HTML string"""
+        HTML = _get_weasyprint_html()
         pdf_file = HTML(string=html_content).write_pdf()
         return pdf_file
 
@@ -135,6 +149,7 @@ Je me permets de vous contacter afin de postuler pour un stage au sein de votre 
         context = {'nom_entreprise': nom_entreprise,'email_entreprise': email_entreprise,'lieu_entreprise': lieu_entreprise}
         template = get_template('app/LM.html')
         html_content = template.render(context)
+        HTML = _get_weasyprint_html()
         pdf_file = HTML(string=html_content).write_pdf()
         return pdf_file
 

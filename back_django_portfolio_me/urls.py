@@ -22,6 +22,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('core.urls')),
     path('api/rag/', include('rag.urls')),
+    path('api/jobs/', include('jobs.urls')),
     path('', lambda request: HttpResponse("test API !")), 
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

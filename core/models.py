@@ -12,16 +12,25 @@ from django.core.validators import (
     MinValueValidator,
 )
 from django.db import models
+from django.utils.deconstruct import deconstructible
 from django.utils.timezone import now
 
 
-def sanitize_upload_path(folder):
-    """Retourne une fonction upload_to qui nettoie le nom de fichier :
+@deconstructible
+class SanitizeUploadPath:
+    """Callable upload_to qui nettoie le nom de fichier :
     - supprime les accents (é→e, ç→c, etc.)
     - remplace espaces et caractères spéciaux par des underscores
     - évite les underscores multiples consécutifs
+
+    Implémenté comme classe @deconstructible pour être sérialisable par les
+    migrations (une closure ne l'est pas).
     """
-    def upload_to(instance, filename):
+
+    def __init__(self, folder):
+        self.folder = folder
+
+    def __call__(self, instance, filename):
         import unicodedata
         name, ext = os.path.splitext(filename)
         # Normalise unicode puis supprime les accents
@@ -31,8 +40,15 @@ def sanitize_upload_path(folder):
         clean_name = re.sub(r'[^\w\-]', '_', name)
         # Fusionne les underscores multiples
         clean_name = re.sub(r'_+', '_', clean_name).strip('_')
-        return f"{folder}/{clean_name}{ext}"
-    return upload_to
+        return f"{self.folder}/{clean_name}{ext}"
+
+    def __eq__(self, other):
+        return isinstance(other, SanitizeUploadPath) and self.folder == other.folder
+
+
+def sanitize_upload_path(folder):
+    """Fabrique conservée pour compatibilité : renvoie un callable déconstructible."""
+    return SanitizeUploadPath(folder)
 
 
 class Notification(models.Model):
