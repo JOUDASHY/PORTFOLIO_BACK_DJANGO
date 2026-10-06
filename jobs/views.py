@@ -1,6 +1,7 @@
 from django.db.models import Q
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -25,7 +26,13 @@ class JobOfferViewSet(viewsets.ModelViewSet):
 
     serializer_class = JobOfferSerializer
     permission_classes = [IsAuthenticated]
-    http_method_names = ["get", "patch", "delete", "head", "options"]
+    # "post" est requis pour l'action custom to-prospect ; la création directe
+    # d'offres est explicitement refusée dans create() ci-dessous.
+    http_method_names = ["get", "post", "patch", "delete", "head", "options"]
+
+    def create(self, request, *args, **kwargs):
+        # Les offres proviennent uniquement de la collecte, pas d'un POST manuel.
+        raise MethodNotAllowed("POST", detail="Les offres ne se créent pas manuellement.")
 
     def get_queryset(self):
         qs = JobOffer.objects.all()
