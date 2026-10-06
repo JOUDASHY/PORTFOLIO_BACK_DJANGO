@@ -15,6 +15,7 @@ from .serializers import (
     RunSearchSerializer,
 )
 from .services import run_search
+from .translation import translate_text
 
 
 class JobOfferViewSet(viewsets.ModelViewSet):
@@ -98,6 +99,35 @@ class JobSearchQueryViewSet(viewsets.ModelViewSet):
     queryset = JobSearchQuery.objects.all()
     serializer_class = JobSearchQuerySerializer
     permission_classes = [IsAuthenticated]
+
+
+class TranslateView(APIView):
+    """POST /api/jobs/translate/ — traduit un texte via Groq.
+
+    Body : { "text": "...", "target_lang": "fr" }
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        text = (request.data.get("text") or "").strip()
+        target_lang = (request.data.get("target_lang") or "fr").strip()
+        if not text:
+            return Response(
+                {"detail": "Champ 'text' requis."}, status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            translated = translate_text(text, target_lang)
+        except RuntimeError as exc:
+            return Response(
+                {"detail": str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+        except Exception as exc:  # erreur LLM inattendue
+            return Response(
+                {"detail": f"Échec de la traduction : {exc}"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+        return Response({"translated": translated, "target_lang": target_lang})
 
 
 class RunFetchView(APIView):
