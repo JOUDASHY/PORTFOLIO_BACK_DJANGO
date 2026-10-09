@@ -49,6 +49,9 @@ class JobOffer(models.Model):
         ("france_travail", "France Travail"),
         ("adzuna", "Adzuna"),
         ("jooble", "Jooble"),
+        ("jobicy", "Jobicy"),
+        ("himalayas", "Himalayas"),
+        ("weworkremotely", "We Work Remotely"),
     ]
     STATUS_CHOICES = [
         ("new", "Nouvelle"),
@@ -70,6 +73,11 @@ class JobOffer(models.Model):
     description = models.TextField(blank=True)
     url = models.URLField(max_length=1000)
     salary = models.CharField(max_length=255, blank=True)
+
+    # Candidature : email direct extrait de l'annonce (si présent) et flag
+    # "postulable directement / gratuitement" (faux pour les plateformes payantes).
+    apply_email = models.EmailField(blank=True)
+    direct_apply = models.BooleanField(default=True)
 
     tags = models.JSONField(default=list, blank=True)
     match_score = models.IntegerField(default=0)

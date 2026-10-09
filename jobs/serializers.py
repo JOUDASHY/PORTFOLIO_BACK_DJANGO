@@ -8,13 +8,15 @@ class JobOfferSerializer(serializers.ModelSerializer):
         model = JobOffer
         fields = [
             "id", "source", "title", "company", "location", "is_remote",
-            "contract_type", "description", "url", "salary", "tags",
+            "contract_type", "description", "url", "salary",
+            "apply_email", "direct_apply", "tags",
             "match_score", "published_at", "fetched_at", "status",
             "query", "prospect",
         ]
         read_only_fields = [
             "id", "source", "title", "company", "location", "is_remote",
-            "contract_type", "description", "url", "salary", "tags",
+            "contract_type", "description", "url", "salary",
+            "apply_email", "direct_apply", "tags",
             "match_score", "published_at", "fetched_at", "query", "prospect",
         ]
 

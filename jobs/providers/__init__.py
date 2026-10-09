@@ -5,15 +5,21 @@ from .adzuna import AdzunaProvider
 from .arbeitnow import ArbeitnowProvider
 from .base import JobProvider, NormalizedJob
 from .france_travail import FranceTravailProvider
+from .himalayas import HimalayasProvider
+from .jobicy import JobicyProvider
 from .remoteok import RemoteOkProvider
 from .remotive import RemotiveProvider
 from .themuse import TheMuseProvider
+from .weworkremotely import WeWorkRemotelyProvider
 
 ALL_PROVIDERS: list[type[JobProvider]] = [
     RemotiveProvider,
     ArbeitnowProvider,
     RemoteOkProvider,
     TheMuseProvider,
+    JobicyProvider,
+    HimalayasProvider,
+    WeWorkRemotelyProvider,
     FranceTravailProvider,
     AdzunaProvider,
 ]

@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import logging
+from urllib.parse import urlparse
 
+from django.conf import settings
 from django.utils import timezone
 
 from .models import JobOffer, JobSearchQuery, make_dedup_hash
@@ -10,16 +12,56 @@ from .providers import NormalizedJob, get_providers
 
 logger = logging.getLogger("jobs")
 
+# Plateformes où postuler est verrouillé / payant (marketplaces, pas de candidature
+# directe gratuite). Surchargeables via settings.JOB_BLACKLIST_DOMAINS.
+DEFAULT_BLACKLIST = ["lemon.io", "toptal.com", "arc.dev", "turing.com", "gun.io"]
 
-def score_offer(job: NormalizedJob, keywords: str) -> int:
-    """Score de pertinence simple : présence des mots-clés + bonus remote."""
+
+def _blacklist_domains() -> set[str]:
+    return {d.lower() for d in getattr(settings, "JOB_BLACKLIST_DOMAINS", DEFAULT_BLACKLIST)}
+
+
+def is_blacklisted(url: str) -> bool:
+    """Vrai si l'URL appartient à une plateforme payante/verrouillée."""
+    try:
+        host = urlparse(url).netloc.lower()
+    except Exception:
+        return False
+    return any(host == d or host.endswith("." + d) for d in _blacklist_domains())
+
+
+def competence_terms() -> list[str]:
+    """Noms des compétences du profil (pour scorer la pertinence vs ton CV)."""
+    try:
+        from core.models import Competence
+
+        return [
+            c.strip().lower()
+            for c in Competence.objects.values_list("name", flat=True)
+            if c and c.strip()
+        ]
+    except Exception:  # BDD indisponible / app non migrée
+        return []
+
+
+def score_offer(
+    job: NormalizedJob, keywords: str, competences: list[str] | None = None
+) -> int:
+    """Score de pertinence : mots-clés + compétences du profil + remote."""
     score = 0
+    title = job.title.lower()
     haystack = f"{job.title} {job.company} {' '.join(job.tags)} {job.description}".lower()
     for word in {w.strip().lower() for w in keywords.split() if len(w.strip()) > 2}:
-        if word in job.title.lower():
+        if word in title:
             score += 10
         elif word in haystack:
             score += 4
+    # Bonus si l'offre matche tes compétences réelles.
+    for comp in competences or []:
+        if comp in title:
+            score += 8
+        elif comp in haystack:
+            score += 3
     if job.is_remote:
         score += 3
     return score
@@ -29,13 +71,17 @@ def persist_jobs(
     jobs: list[NormalizedJob],
     keywords: str = "",
     query: JobSearchQuery | None = None,
+    competences: list[str] | None = None,
 ) -> dict:
     """Enregistre/actualise une liste d'offres. Renvoie un récap chiffré."""
-    created = updated = 0
+    created = updated = blacklisted = 0
     for job in jobs:
         if not job.external_id or not job.url:
             continue
         dedup = make_dedup_hash(job.source, job.external_id)
+        blocked = is_blacklisted(job.url)
+        if blocked:
+            blacklisted += 1
         defaults = {
             "source": job.source,
             "external_id": job.external_id,
@@ -47,8 +93,10 @@ def persist_jobs(
             "description": job.description or "",
             "url": job.url[:1000],
             "salary": (job.salary or "")[:255],
+            "apply_email": (job.apply_email or "")[:254],
+            "direct_apply": not blocked,
             "tags": job.tags or [],
-            "match_score": score_offer(job, keywords),
+            "match_score": score_offer(job, keywords, competences),
             "published_at": job.published_at,
             "query": query,
         }
@@ -60,7 +108,12 @@ def persist_jobs(
             created += 1
         else:
             updated += 1
-    return {"created": created, "updated": updated, "received": len(jobs)}
+    return {
+        "created": created,
+        "updated": updated,
+        "received": len(jobs),
+        "blacklisted": blacklisted,
+    }
 
 
 def run_search(
@@ -86,7 +139,10 @@ def run_search(
         per_source[provider.source_key] = len(results)
         all_jobs.extend(results)
 
-    stats = persist_jobs(all_jobs, keywords=keywords, query=query)
+    competences = competence_terms()  # chargé une seule fois
+    stats = persist_jobs(
+        all_jobs, keywords=keywords, query=query, competences=competences
+    )
     stats["per_source"] = per_source
 
     if query is not None:

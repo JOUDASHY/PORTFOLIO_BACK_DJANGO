@@ -44,6 +44,8 @@ class JobOfferViewSet(viewsets.ModelViewSet):
             qs = qs.filter(source=params["source"])
         if params.get("remote") in ("true", "1"):
             qs = qs.filter(is_remote=True)
+        if params.get("direct") in ("true", "1"):
+            qs = qs.filter(direct_apply=True)
         if params.get("prospect"):
             qs = qs.filter(prospect__id=params["prospect"])
         search = params.get("search")

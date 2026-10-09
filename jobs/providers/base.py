@@ -7,12 +7,23 @@ Ajouter une source = ajouter un fichier qui sous-classe JobProvider, rien d'autr
 from __future__ import annotations
 
 import logging
+import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
 import requests
+
+_EMAIL_RE = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
+
+
+def extract_email(text: str) -> str:
+    """Renvoie le premier email trouvé dans un texte (ou '')."""
+    if not text:
+        return ""
+    m = _EMAIL_RE.search(text)
+    return m.group(0) if m else ""
 
 logger = logging.getLogger("jobs")
 
@@ -52,6 +63,7 @@ class NormalizedJob:
     contract_type: str = ""
     description: str = ""
     salary: str = ""
+    apply_email: str = ""
     tags: list = field(default_factory=list)
     published_at: Optional[datetime] = None
 
