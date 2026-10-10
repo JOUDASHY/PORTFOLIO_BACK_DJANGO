@@ -3,6 +3,7 @@ et l'ajouter à ALL_PROVIDERS. Rien d'autre à toucher dans l'app.
 """
 from .adzuna import AdzunaProvider
 from .arbeitnow import ArbeitnowProvider
+from .asako import AsakoProvider
 from .base import JobProvider, NormalizedJob
 from .france_travail import FranceTravailProvider
 from .himalayas import HimalayasProvider
@@ -20,6 +21,7 @@ ALL_PROVIDERS: list[type[JobProvider]] = [
     JobicyProvider,
     HimalayasProvider,
     WeWorkRemotelyProvider,
+    AsakoProvider,
     FranceTravailProvider,
     AdzunaProvider,
 ]
