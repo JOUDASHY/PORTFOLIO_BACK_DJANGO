@@ -8,6 +8,7 @@ from .base import JobProvider, NormalizedJob
 from .france_travail import FranceTravailProvider
 from .himalayas import HimalayasProvider
 from .jobicy import JobicyProvider
+from .recruteo import RecruteoProvider
 from .remoteok import RemoteOkProvider
 from .remotive import RemotiveProvider
 from .themuse import TheMuseProvider
@@ -22,6 +23,7 @@ ALL_PROVIDERS: list[type[JobProvider]] = [
     HimalayasProvider,
     WeWorkRemotelyProvider,
     AsakoProvider,
+    RecruteoProvider,
     FranceTravailProvider,
     AdzunaProvider,
 ]

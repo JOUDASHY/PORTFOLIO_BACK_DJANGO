@@ -6,6 +6,7 @@ Ajouter une source = ajouter un fichier qui sous-classe JobProvider, rien d'autr
 """
 from __future__ import annotations
 
+import json
 import logging
 import re
 from abc import ABC, abstractmethod
@@ -16,6 +17,9 @@ from typing import Optional
 import requests
 
 _EMAIL_RE = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
+_LD_JSON_RE = re.compile(
+    r'<script[^>]*type="application/ld\+json"[^>]*>(.*?)</script>', re.S
+)
 
 
 def extract_email(text: str) -> str:
@@ -24,6 +28,40 @@ def extract_email(text: str) -> str:
         return ""
     m = _EMAIL_RE.search(text)
     return m.group(0) if m else ""
+
+
+def extract_jobposting(html: str) -> dict | None:
+    """Renvoie le bloc JSON-LD schema.org JobPosting d'une page (ou None).
+
+    Standard stable utilisé par Asako, Recruteo… → extraction fiable.
+    """
+    for block in _LD_JSON_RE.findall(html):
+        try:
+            data = json.loads(block.strip())
+        except json.JSONDecodeError:
+            continue
+        for item in data if isinstance(data, list) else [data]:
+            if isinstance(item, dict) and item.get("@type") == "JobPosting":
+                return item
+    return None
+
+
+def jsonld_location(job_location) -> str:
+    """Extrait un libellé de lieu depuis le champ jobLocation d'un JobPosting."""
+    loc = job_location[0] if isinstance(job_location, list) and job_location else job_location
+    if not isinstance(loc, dict):
+        return ""
+    addr = loc.get("address")
+    if isinstance(addr, dict):
+        parts = [
+            addr.get("addressLocality"),
+            addr.get("addressRegion"),
+            addr.get("addressCountry"),
+        ]
+        return ", ".join(p for p in parts if isinstance(p, str) and p)
+    if isinstance(addr, str):
+        return addr
+    return ""
 
 logger = logging.getLogger("jobs")
 

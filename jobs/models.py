@@ -53,6 +53,7 @@ class JobOffer(models.Model):
         ("himalayas", "Himalayas"),
         ("weworkremotely", "We Work Remotely"),
         ("asako", "Asako (Madagascar)"),
+        ("recruteo", "Recruteo (Madagascar)"),
     ]
     STATUS_CHOICES = [
         ("new", "Nouvelle"),
